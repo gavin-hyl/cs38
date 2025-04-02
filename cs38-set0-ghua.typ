@@ -1,0 +1,213 @@
+#let title = "CS 38 Set 0"
+#let date = "2025-04"
+
+#set heading(numbering: (..nums) => {
+let levels = nums.pos();
+  if levels.len() == 1 {
+    "Problem " + numbering("1", ..levels)
+  } else {
+    numbering("1.a.i", ..levels)
+  }
+})
+
+#set page(
+  numbering: "1",
+    header: [
+      #smallcaps([#title])
+      #line(length: 100%)
+    ],
+)
+
+#set par(justify: true)
+
+=
+_Warmup:_
+- 
+
+
+_Proof:_
+By the fundamental theorem of arithmetic, every integer greater than $1$ can be uniquely expressed as a product of prime numbers.
+Therefore, we may express $n in [1, 200]$ as $ n = 2^(r_2) dot 3^(r_3) dot dots.c = 2^r dot m $
+where $m$ is an odd integer that contains all prime factors greater than $2$, and $r$ is the number of times $2$ divides $n$.
+Since $n <= 200$, we have $m <= 200 / 2^r <= 200$.
+Since $m$ is odd, it can at most take on $100$ values, which are $1, 3, 5, dots, 199$.
+Since we are choosing $101$ different numbers, by the pigeonhole principle, at least two of them must have an odd part $m$ that is the same.
+Therefore, we have $n_1 = 2^(r_1) dot m$ and $n_2 = 2^(r_2) dot m$ for some $r_1, r_2$.
+WLOG, let $r_1 < r_2$ (equality is impossible since $n_1$ and $n_2$ are distinct), so $r_2 - r_1$ is a positive integer.
+Then, $ n_2 / n_1 = 2^(r_2) / 2^(r_1) = 2^(r_2 - r_1) in NN_+ => n_1 | n_2 $
+#align( right, $qed$)
+
+=
+_Proof:_
+Assume, to the contrary, that there exists two longest paths $P, Q$ of length $n$ in the graph $G$, and that they do not share any vertices.
+Select $2$ vertices, $u in P, v in Q$ such that the shortest path $R$ between $u, v$ is the shortest among all possible choices of $u, v$.
+
+We first prove that $R$ does not intersect $P$ or $Q$. Assume, to the contrary (WLOG), that $R$ intersects $P$ at vertex $x$.
+Then, we can construct a new path $R'$ by replacing the segment of $P$ from $u$ to $x$ with the segment of $R$ from $x$ to $v$, which is shorter than $R$.
+This contradicts the assumption that the selection $u, v$ gives the shortest $R$.
+Therefore, $R$ does not intersect $P$ or $Q$.
+
+Next, we construct a path longer than $P$ (and $Q$).
+Consider the path $P' + R + Q'$, where 
+- $P'$ is the segment of $P$ from one end of $P$ to $u$. Denote $P = P' + P''$, where $P''$ is the segment of $P$ from $u$ to the other end of $P$. Let $P'$ be the longer of the two segments. Therefore, since $|P| = |P'| + |P''|$, we have $|P'| >= ceil (|P|) / 2 ceil.r = ceil n/2 ceil.r$.
+- $R$ is the shortest path from $u$ to $v$. It must have length $|R| >= 1$.
+- $Q'$ is the segment of $Q$ from $v$ to one end of $Q$, defined in an analogous way to $P'$. $|Q'| >= ceil n/2 ceil.r$.
+
+Therefore, $|P' + R + Q'| = ceil n/2 ceil.r + 1 + ceil n/2 ceil.r >= n+1 > |P| = |Q|$, which contradicts the assumption that $P, Q$ are longest paths in $G$.
+
+Thus, we conclude that $P$ and $Q$ must share at least one vertex.
+#align( right, $qed$)
+
+
+=
+==
+_Proof:_
+Defining terms mathematically, we wish to prove the statement
+$
+  f in O(g) and g in O(h) <=> f in O(h)
+$
+This may be shown by simply expanding the definition of both sides.
+$
+  f in O(g) <=> exists c, n_0 in NN_+ "st" forall n >= n_0, f(n) <= c g(n) \
+  g in O(h) <=> exists d, m_0 in NN_+ "st" forall m >= m_0, g(m) <= d h(m)
+$
+Let $k = max(n_0, m_0)$.
+Then, we have $forall n >= k, f(n) <= c g(n) <= c d h(n)$, where $c d$ is a constant.
+Therefore, we have $f in O(h)$.
+#align( right, $qed$)
+
+
+==
+_Proof:_
+By definition of monotonicity, if $a > b, a, b in ZZ_+$, then $f(a) > f(b), g(a) > g(b)$.
+Since the ranges of $f$ and $g$ are both in $ZZ_+$, we have $f(n) > 0, g(m) > 0$ for all $n, m in ZZ_+$.
+Therefore,
+$
+  f(a) + g(a) &> f(a) + g(a) + (g(b) - g(a)) \
+  &= f(a) + g(b) \
+  &> f(a) + (f(b) - f(a)) + g(b)\
+  &= f(b) + g(b) \
+$
+
+Therefore, $f+g$ is monotone increasing.
+
+Similarly, if $a > b, a, b in ZZ_+$, then $g(a) > g(b)$ and $g(a), g(b) in ZZ_+$ (in the domain of $f$), so we have $f(g(a)) > f(g(b))$ from the monotonicity of $f$.
+Therefore, $f compose g$ is also monotone increasing.
+#align( right, $qed$)
+
+
+==
+_Proof:_
+By definition, $T(n) in n^(O(1)) <=> exists N, c: T(n) <= n^c, forall n > N <=> T(n) in O(n^c)$
+#align( right, $qed$)
+
+
+==
+_Proof:_
+$
+  n! = product_(i=1)^n i < (product_(i=1)^n i) dot (product_(i=1)^n n/i) = product_(i=1)^n n = n^n \
+$
+Therefore, for all $n > 0$, we have $n! < n^n$.
+Since $log$ is a monotone increasing function, we have $log(n!) < log(n^n) = n log(n)$.
+Therefore, we have for $c=1, N=0$, $log(n!) <= c n log(n) forall n > N$.
+Therefore, $log(n!) in O(n log(n))$.
+#align( right, $qed$)
+
+
+=
+==
+_Proof:_
+Define the set 
+$
+  S = ZZ_+ inter (union.big_(i=1 \ i "is odd") [a_i, 2 a_i)) \
+$
+where $a_i = 2^i$. Since $2a_i = 2^(i+1) < 2^(i+2) = a_(i+2)$, $S$ is a disjoint union of intervals.
+Therefore, if $n in S$, then it must be in exactly one of the intervals $[a_i, 2 a_i)$.
+
+Since $4 a_i = a_(i+2)$, we must have 
+$
+  S' = ZZ_+\\S = ZZ_+ inter (union.big_(i=1 \ i "is odd") [2a_i, 4a_i)) \
+$
+Similarly, $S'$ is a disjoint union of intervals.
+If $n in S'$, then it must be in exactly one of the intervals $[2a_i, 4a_i)$.
+
+Define the functions $f$ and $g$ as follows:
+$
+  f(n) = cases(
+    e^(a_i) + (n - a_i) "if" n in [a_i, 2 a_i),
+    e^n "if" n in.not S,
+  ) \
+  g(n) = cases(
+    e^n "if" n in S,
+    e^(2a_i) + (n - 2a_i) "if" n in [2a_i, 4a_i),
+  )
+$
+
+We first show that both $f$ and $g$ are monotone increasing.
+We will show that for any consecutive pair of integers $n, n+1$, $f(n) <= f(n+1)$ and $g(n) <= g(n+1)$.
+
+Let $n, n+1 in S$. 
+Then, $f(n) = e^(a_i) + (n - a_i), f(n+1) = e^(a_i) + (n+1 - a_i) > f(n)$.
+$g(n) = e^n, g(n+1) = e^(n+1) > g(n)$.
+
+Similarly, if $n, n+1 in S'$, the same argument applies.
+
+If $n in S$ and $n+1 in S'$, it must be that $n+1 = 2a_i$ for some $i$ (for all other $n$, we would have $n+1 in S$ since $S$ is a union of intervals).
+
+- For $f(n)$: $f(n) = e^(a_i) + (n - a_i), f(n+1) = e^(2a_i)$. Therefore, $f(n+1) - f(n) = e^(a_i) - (2a_i - 1-a_i) = e^(a_i) - a_i + 1$. Using the Taylor expansion of $e^x$, we have $e^x - x + 1 = (1 + x + x^2/2 + dots.c) - x + 1 = 2 + x^2/2 + dots.c > 0$, so $f(n+1) > f(n)$.
+- For $g(n)$: $g(n) = e^n, g(n+1) = e^(n+1) + (2a_i - 2a_i) = e^(n+1) > g(n)$.
+
+Lastly, if $n in S'$ and $n+1 in S$, it must be that $n+1 = a_i$ for some $i$.
+
+- For $f(n)$: $f(n) = e^n, f(n+1) = e^(a_i) + (a_i - a_i) = e^(a_i) > f(n)$.
+- For $g(n)$: $g(n) = e^(2a_(i-2)) + (n - 2a_(i-2)), g(n+1) = e^(a_i) = e^(4 a_(i-2))$. With a similar argument as above, we have $g(n+1) > g(n)$.
+
+
+
+We then show that these two functions satisfy $f in.not O(g)$ and $g in.not O(f)$.
+
+Assume, to the contrary, that $f in O(g)$. 
+Then, we have $f(n) <= c g(n)$ for some $c > 0, N>0$ and all $n > N$.
+Let $n = 4 a_i - 1$ for some $i$.
+Therefore,
+$
+  f(n) - c g(n) &= e^(4 a_i - 1) - c (e^(2a_i) + (n - 2a_i)) \
+  &= e^(2a_i) (e^(2 a_i - 1) - c) - c(2a_i - 1)\
+  &>= e^(2a_i) (e^(2 a_i - 1) - c) - c e^(2a_i) \
+  &>= e^(2a_i) (e^(2 a_i - 1) - 2c)\
+$
+Since $2c$ is a constant, we can choose $i$ such that $e^(2 a_i - 1) - 2c > 0$ (an explicit formula would be $i > log_2((ln(2c) + 1)/2)$), so $f(n) > c g(n)$, which contradicts the assumption that $f in O(g)$.
+
+Assume, to the contrary, that $g in O(f)$. 
+Then, we have $g(n) <= c f(n)$ for some $c > 0, N>0$ and all $n > N$.
+Let $n = 2 a_i - 1$ for some $i$.
+Therefore,
+$
+  g(n) - c f(n) &= e^(2 a_i - 1) - c (e^(a_i) + (n - a_i)) \
+  &= e^(a_i) (e^(a_i - 1) - c) - c(a_i - 1)\
+  &>= e^(a_i) (e^(a_i - 1) - c) - c e^(a_i) \
+  &>= e^(a_i) (e^(a_i - 1) - 2c)\
+$
+Since $2c$ is a constant, we can choose $i$ such that $e^(a_i - 1) - 2c > 0$, which contradicts the assumption that $g in O(f)$.
+Therefore, we conclude that $f in.not O(g)$ and $g in.not O(f)$.
+#align( right, $qed$)
+
+==
+_Proof:_
+We shall prove the statement.
+
+Let $g(n) = max{f_1(n), dots, f_k (n)} = f_(a_n) (n)$.
+By definition, $g(n) >= f_i (n) space forall i in [1, k], n in ZZ_+$.
+Therefore, $f_i in O(g) space forall i$.
+Let $g'$ be a function such that $f_i in O(g') space forall i$.
+Then, by definition, $exists c_i, N_i: f_i (n) <= g'(n) space forall n > N_i, forall i$.
+Let $N = max{N_1, dots, N_k}$, $c = max{c_1, dots, c_k}$.
+Then, we have 
+$ 
+  g(n) = f_(a_n)(n) <= c_(a_n) g'(n) <= c g'(n) space forall n > N
+$
+Therefore, $g(n) in O(g')$.
+#align( right, $qed$)
+
+#pagebreak()
+Collaborators: Gio Huh
