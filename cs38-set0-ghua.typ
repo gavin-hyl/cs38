@@ -76,8 +76,8 @@ $
 $
 This may be shown by simply expanding the definition of both sides.
 $
-  f in O(g) <=> exists c, n_0 in NN_+ "st" forall n >= n_0, f(n) <= c g(n) \
-  g in O(h) <=> exists d, m_0 in NN_+ "st" forall m >= m_0, g(m) <= d h(m)
+  f in O(g) <=> exists c, n_0 in NN_+ "st" space forall n >= n_0, f(n) <= c g(n) \
+  g in O(h) <=> exists d, m_0 in NN_+ "st" space forall m >= m_0, g(m) <= d h(m)
 $
 Let $k = max(n_0, m_0)$.
 Then, we have $forall n >= k, f(n) <= c g(n) <= c d h(n)$, where $c d$ is a constant.
@@ -109,19 +109,24 @@ _Proof:_
 By definition, $T(n) in n^(O(1)) => exists N, c: T(n) <= n^(c dot 1), forall n > N => T(n) in O(n^c)$.
 In the reverse direction, suppose $T(n) in O(n^k)$. By definition,
 $
-  exists N, c: T(n) <= c n^k = n^(log_n (c) dot k)  space forall n >= N
+  exists N, c: T(n) <= c n^k = n^(log_n (c)) dot n^k = n^(ln(c)/ln(n) + k) space forall n >= N
 $
+
+Let $K = k+1$ and $N' = c$. Then, $forall n >= N', ln(c)/ln(n) <= ln(c)/ln(c) = 1$, so $ln(c)/ln(n) + k <= k+1 = K$.
+
+Therefore, we have $exists K, N': T(n) <= n^K = n^(K dot 1)$ for all $n >= N'$, so $T(n) in n^(O(1))$.
+
 #align( right, $qed$)
 
 
 ==
 _Proof:_
 $
-  n! = product_(i=1)^n i < (product_(i=1)^n i) dot (product_(i=1)^n n/i) = product_(i=1)^n n = n^n \
+  n! = product_(i=1)^n i <= (product_(i=1)^n i) dot (product_(i=1)^n n/i) = product_(i=1)^n n = n^n \
 $
 Therefore, for all $n > 0$, we have $n! < n^n$.
 Since $log$ is a monotone increasing function, we have $log(n!) < log(n^n) = n log(n)$.
-Therefore, we have for $c=1, N=0$, $log(n!) <= c n log(n) forall n > N$.
+Therefore, we have for $c=1, N=0$, $log(n!) <= c n log(n) space forall n > N$.
 Therefore, $log(n!) in O(n log(n))$.
 #align( right, $qed$)
 
@@ -228,6 +233,6 @@ Therefore, $g(n) in O(g')$.
 #pagebreak()
 - Collaborators: Gio Huh
 
-- Typst link to document: https://typst.app/project/rEbJcnocplla6Y5P9ruHGQ
+- Link to GitHub repository (tracks changes): https://github.com/gavin-hyl/cs38
 
 - G-drive link for scratchpad: https://drive.google.com/file/d/1fl5h462QWzYFWYphbSEDJuUL8c2fY3bx/view?usp=sharing
