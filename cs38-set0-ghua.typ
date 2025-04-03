@@ -20,10 +20,9 @@ let levels = nums.pos();
 
 #set par(justify: true)
 
-=
+= // 1
 _Warmup:_
-- 
-
+Please see below.
 
 _Proof:_
 By the fundamental theorem of arithmetic, every integer greater than $1$ can be uniquely expressed as a product of prime numbers.
@@ -31,13 +30,18 @@ Therefore, we may express $n in [1, 200]$ as $ n = 2^(r_2) dot 3^(r_3) dot dots.
 where $m$ is an odd integer that contains all prime factors greater than $2$, and $r$ is the number of times $2$ divides $n$.
 Since $n <= 200$, we have $m <= 200 / 2^r <= 200$.
 Since $m$ is odd, it can at most take on $100$ values, which are $1, 3, 5, dots, 199$.
-Since we are choosing $101$ different numbers, by the pigeonhole principle, at least two of them must have an odd part $m$ that is the same.
+Since we are choosing $101$ different numbers, by the pigeonhole principle, at least two must have an odd part $m$ that is the same.
 Therefore, we have $n_1 = 2^(r_1) dot m$ and $n_2 = 2^(r_2) dot m$ for some $r_1, r_2$.
 WLOG, let $r_1 < r_2$ (equality is impossible since $n_1$ and $n_2$ are distinct), so $r_2 - r_1$ is a positive integer.
 Then, $ n_2 / n_1 = 2^(r_2) / 2^(r_1) = 2^(r_2 - r_1) in NN_+ => n_1 | n_2 $
 #align( right, $qed$)
 
-=
+= // 2
+_Warmup:_
+The longest path takes up a sufficient amount of vertices, such that another longest path must share at least one (intuitively).
+#image("figures/set0/p2.jpg")
+
+
 _Proof:_
 Assume, to the contrary, that there exists two longest paths $P, Q$ of length $n$ in the graph $G$, and that they do not share any vertices.
 Select $2$ vertices, $u in P, v in Q$ such that the shortest path $R$ between $u, v$ is the shortest among all possible choices of $u, v$.
@@ -59,7 +63,11 @@ Thus, we conclude that $P$ and $Q$ must share at least one vertex.
 #align( right, $qed$)
 
 
-=
+= // 3
+_Warmup:_
+- Transitive means that if $a$ is related to $b$, and $b$ is related to $c$, then $a$ is related to $c$. Monotone increasing means that if $a > b$, then $f(a) > f(b)$. Functional composition means $(f compose g) (x) = f(g(x))$.
+- $n! < n^n$
+
 ==
 _Proof:_
 Defining terms mathematically, we wish to prove the statement
@@ -92,13 +100,17 @@ $
 Therefore, $f+g$ is monotone increasing.
 
 Similarly, if $a > b, a, b in ZZ_+$, then $g(a) > g(b)$ and $g(a), g(b) in ZZ_+$ (in the domain of $f$), so we have $f(g(a)) > f(g(b))$ from the monotonicity of $f$.
-Therefore, $f compose g$ is also monotone increasing.
+Therefore, $f compose g$ is also monotonically increasing.
 #align( right, $qed$)
 
 
 ==
 _Proof:_
-By definition, $T(n) in n^(O(1)) <=> exists N, c: T(n) <= n^c, forall n > N <=> T(n) in O(n^c)$
+By definition, $T(n) in n^(O(1)) => exists N, c: T(n) <= n^(c dot 1), forall n > N => T(n) in O(n^c)$.
+In the reverse direction, suppose $T(n) in O(n^k)$. By definition,
+$
+  exists N, c: T(n) <= c n^k = n^(log_n (c) dot k)  space forall n >= N
+$
 #align( right, $qed$)
 
 
@@ -114,7 +126,11 @@ Therefore, $log(n!) in O(n log(n))$.
 #align( right, $qed$)
 
 
-=
+= // 4
+_Warmup:_
+- The two functions are shown below.
+- We want to find the "smallest" $g$ such that all $f_i$ are in $O(g)$. Ignoring the constant in the $O$ notation for now, a "smallest" $g$ would be the maximum of all $f_i$ since going any smaller would not satisfy $f_i < g$.
+
 ==
 _Proof:_
 Define the set 
@@ -122,14 +138,14 @@ $
   S = ZZ_+ inter (union.big_(i=1 \ i "is odd") [a_i, 2 a_i)) \
 $
 where $a_i = 2^i$. Since $2a_i = 2^(i+1) < 2^(i+2) = a_(i+2)$, $S$ is a disjoint union of intervals.
-Therefore, if $n in S$, then it must be in exactly one of the intervals $[a_i, 2 a_i)$.
+Therefore, if $n in S$, it must be in exactly one of the intervals $[a_i, 2 a_i)$.
 
 Since $4 a_i = a_(i+2)$, we must have 
 $
   S' = ZZ_+\\S = ZZ_+ inter (union.big_(i=1 \ i "is odd") [2a_i, 4a_i)) \
 $
 Similarly, $S'$ is a disjoint union of intervals.
-If $n in S'$, then it must be in exactly one of the intervals $[2a_i, 4a_i)$.
+If $n in S'$, it must be in exactly one of the intervals $[2a_i, 4a_i)$.
 
 Define the functions $f$ and $g$ as follows:
 $
@@ -200,14 +216,18 @@ Let $g(n) = max{f_1(n), dots, f_k (n)} = f_(a_n) (n)$.
 By definition, $g(n) >= f_i (n) space forall i in [1, k], n in ZZ_+$.
 Therefore, $f_i in O(g) space forall i$.
 Let $g'$ be a function such that $f_i in O(g') space forall i$.
-Then, by definition, $exists c_i, N_i: f_i (n) <= g'(n) space forall n > N_i, forall i$.
+Then, by definition, $exists c_i, N_i: f_i (n) <= g'(n) space forall n >= N_i, forall i$.
 Let $N = max{N_1, dots, N_k}$, $c = max{c_1, dots, c_k}$.
 Then, we have 
 $ 
-  g(n) = f_(a_n)(n) <= c_(a_n) g'(n) <= c g'(n) space forall n > N
+  g(n) = f_(a_n)(n) <= c_(a_n) g'(n) <= c g'(n) space forall n >= N
 $
 Therefore, $g(n) in O(g')$.
 #align( right, $qed$)
 
 #pagebreak()
-Collaborators: Gio Huh
+- Collaborators: Gio Huh
+
+- Typst link to document: https://typst.app/project/rEbJcnocplla6Y5P9ruHGQ
+
+- G-drive link for scratchpad: https://drive.google.com/file/d/1fl5h462QWzYFWYphbSEDJuUL8c2fY3bx/view?usp=sharing
