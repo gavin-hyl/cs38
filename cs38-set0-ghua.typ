@@ -34,7 +34,7 @@ Since we are choosing $101$ different numbers, by the pigeonhole principle, at l
 Therefore, we have $n_1 = 2^(r_1) dot m$ and $n_2 = 2^(r_2) dot m$ for some $r_1, r_2$.
 WLOG, let $r_1 < r_2$ (equality is impossible since $n_1$ and $n_2$ are distinct), so $r_2 - r_1$ is a positive integer.
 Then, $ n_2 / n_1 = 2^(r_2) / 2^(r_1) = 2^(r_2 - r_1) in NN_+ => n_1 | n_2 $
-#align( right, $qed$)
+#align(right, $qed$)
 
 = // 2
 _Warmup:_
@@ -60,7 +60,7 @@ Consider the path $P' + R + Q'$, where
 Therefore, $|P' + R + Q'| = ceil n/2 ceil.r + 1 + ceil n/2 ceil.r >= n+1 > |P| = |Q|$, which contradicts the assumption that $P, Q$ are longest paths in $G$.
 
 Thus, we conclude that $P$ and $Q$ must share at least one vertex.
-#align( right, $qed$)
+#align(right, $qed$)
 
 
 = // 3
@@ -82,7 +82,7 @@ $
 Let $k = max(n_0, m_0)$.
 Then, we have $forall n >= k, f(n) <= c g(n) <= c d h(n)$, where $c d$ is a constant.
 Therefore, we have $f in O(h)$.
-#align( right, $qed$)
+#align(right, $qed$)
 
 
 ==
@@ -101,7 +101,7 @@ Therefore, $f+g$ is monotone increasing.
 
 Similarly, if $a > b, a, b in ZZ_+$, then $g(a) > g(b)$ and $g(a), g(b) in ZZ_+$ (in the domain of $f$), so we have $f(g(a)) > f(g(b))$ from the monotonicity of $f$.
 Therefore, $f compose g$ is also monotonically increasing.
-#align( right, $qed$)
+#align(right, $qed$)
 
 
 ==
@@ -116,11 +116,12 @@ Let $K = k+1$ and $N' = c$. Then, $forall n >= N', ln(c)/ln(n) <= ln(c)/ln(c) = 
 
 Therefore, we have $exists K, N': T(n) <= n^K = n^(K dot 1)$ for all $n >= N'$, so $T(n) in n^(O(1))$.
 
-#align( right, $qed$)
+#align(right, $qed$)
 
 
 ==
 _Proof:_
+We first show that $log(n!) in O(n log(n))$.
 $
   n! = product_(i=1)^n i <= (product_(i=1)^n i) dot (product_(i=1)^n n/i) = product_(i=1)^n n = n^n \
 $
@@ -128,7 +129,36 @@ Therefore, for all $n > 0$, we have $n! < n^n$.
 Since $log$ is a monotone increasing function, we have $log(n!) < log(n^n) = n log(n)$.
 Therefore, we have for $c=1, N=0$, $log(n!) <= c n log(n) space forall n > N$.
 Therefore, $log(n!) in O(n log(n))$.
-#align( right, $qed$)
+
+We then show that $log(n!) in Omega(n log(n))$. We achieve this by showing $n! >= n^(n/2)$.
+
+We first prove a lemma: if positive integers $a, b$ satisfy $a+b = n + 1$, then $a b >= n$.
+$
+  a b - n= a (n + 1 - a) -n = n a + a - a^2 -n =n(a-1) - a(a-1) = (a-1)(n-a) >= 0 \
+  a b >= n
+$
+
+Then, if $n$ is even,
+$
+  n! &= (product_(k=1)^(n/2) k) dot (product_(k=1)^(n/2) (n+1-k)) \
+  &= (product_(k=1)^(n/2) k dot (n+1-k)) \
+  &>= product_(k=1)^(n/2) n = n^(n/2) \
+$
+
+If $n$ is odd,
+$
+  n! &= (product_(k=1)^((n-1)/2) k) dot (product_(k=1)^((n-1)/2) (n+1-k)) dot ((n+1)/2) \
+  &= (product_(k=1)^((n-1)/2) k dot (n+1-k)) dot ((n+1)/2) \
+  &>= (product_(k=1)^((n-1)/2) n) dot ((n+1)/2) \
+  &>= 1/2 (n^((n+1)/2) + n^((n-1)/2)) \
+  &>= sqrt(n)/2 (n^(n/2)) \
+$
+The minimum $n$ such that $sqrt(n)/2 >= 1$ is $n=4$, so we have $n! >= n^(n/2)$ for all $n > 4 = N$. This is equivalent to $log(n!) >= 1/2 n log(n)$.
+
+Therefore, we have $log(n!) in Omega(n log(n))$ for $c=1/2, N=4$.
+
+Since we have proven both $log(n!) in O(n log(n))$ and $log(n!) in Omega(n log(n))$, we conclude that $log(n!) in Theta(n log(n))$.
+#align(right, $qed$)
 
 
 = // 4
@@ -155,61 +185,80 @@ If $n in S'$, it must be in exactly one of the intervals $[2a_i, 4a_i)$.
 Define the functions $f$ and $g$ as follows:
 $
   f(n) = cases(
-    e^(a_i) + (n - a_i) "if" n in [a_i, 2 a_i),
-    e^n "if" n in.not S,
+    3^(a_i) + (n - a_i) "if" n in [a_i, 2 a_i),
+    3^n "if" n in.not S,
   ) \
   g(n) = cases(
-    e^n "if" n in S,
-    e^(2a_i) + (n - 2a_i) "if" n in [2a_i, 4a_i),
+    3^n "if" n in S,
+    3^(2a_i) + (n - 2a_i) "if" n in [2a_i, 4a_i),
   )
 $
 
-We first show that both $f$ and $g$ are monotone increasing.
+*We first show that both $f$ and $g$ are monotone increasing.*
 We will show that for any consecutive pair of integers $n, n+1$, $f(n) <= f(n+1)$ and $g(n) <= g(n+1)$.
 
-Let $n, n+1 in S$. 
-Then, $f(n) = e^(a_i) + (n - a_i), f(n+1) = e^(a_i) + (n+1 - a_i) > f(n)$.
-$g(n) = e^n, g(n+1) = e^(n+1) > g(n)$.
+- Let $n, n+1 in S$. 
+Then,
+$
+  f(n+1) - f(n) &= 3^(a_i) + (n+1 - a_i) - (3^(a_i) + (n - a_i)) = 1 > 0 \
+  g(n+1) - g(n) &= 3^(n+1) - 3^n = 3^n (e - 1) > 0 \
+$
+so both $f$ and $g$ are monotone increasing.
 
-Similarly, if $n, n+1 in S'$, the same argument applies.
+- Similarly, if $n, n+1 in S'$, the same argument applies.
 
-If $n in S$ and $n+1 in S'$, it must be that $n+1 = 2a_i$ for some $i$ (for all other $n$, we would have $n+1 in S$ since $S$ is a union of intervals).
+- If $n in S$ and $n+1 in S'$, it must be that $n+1 = 2a_i$ for some $i$ (for all other $n$, we would have $n+1 in S$ since $S$ is a union of intervals).
+$
+  f(n+1) - f(n) &= 3^(2a_i) - 3^(a_i) - (2a_i - 1-a_i) \
+  &= 3^(2a_i) - 3^(a_i) - a_i + 1 > 0 \
+  &>= 2 dot 3^(a_i) - 3^(a_i) - a_i + 1 > 0 \
+  &>= 3^(a_i) - a_i + 1 > 0 \
+  &= (1 + a_i + a_i^2/2 + dots.c) - a_i + 1 \
+  &= 2 + a_i^2/2 + dots.c > 0  "  since" a_i > 0\
+$
+$
+  g(n+1) - g(n) &= 3^(2a_i) + 0 - 3^(2a_i - 1) > 0
+$
+so both $f$ and $g$ are monotone increasing.
 
-- For $f(n)$: $f(n) = e^(a_i) + (n - a_i), f(n+1) = e^(2a_i)$. Therefore, $f(n+1) - f(n) = e^(a_i) - (2a_i - 1-a_i) = e^(a_i) - a_i + 1$. Using the Taylor expansion of $e^x$, we have $e^x - x + 1 = (1 + x + x^2/2 + dots.c) - x + 1 = 2 + x^2/2 + dots.c > 0$, so $f(n+1) > f(n)$.
-- For $g(n)$: $g(n) = e^n, g(n+1) = e^(n+1) + (2a_i - 2a_i) = e^(n+1) > g(n)$.
+- Lastly, if $n in S'$ and $n+1 in S$, it must be that $n+1 = 4a_i$ for some $i$.
+$
+  f(n+1) - f(n) = 3^(4a_i) - 3^(4a_i - 1) > 0
+$
+$
+  g(n+1) - g(n) &= 3^(4a_i) - (3^(2a_i - 1) + (4a_i - 1 - 2a_i)) \
+  &= 3^(4a_i) - 3^(2a_i - 1) - (2a_i - 1) \
+$
+The analysis proceeds similarly to the previous case, and $g(n+1) - g(n) > 0$.
 
-Lastly, if $n in S'$ and $n+1 in S$, it must be that $n+1 = a_i$ for some $i$.
-
-- For $f(n)$: $f(n) = e^n, f(n+1) = e^(a_i) + (a_i - a_i) = e^(a_i) > f(n)$.
-- For $g(n)$: $g(n) = e^(2a_(i-2)) + (n - 2a_(i-2)), g(n+1) = e^(a_i) = e^(4 a_(i-2))$. With a similar argument as above, we have $g(n+1) > g(n)$.
+Therefore, both $f$ and $g$ are monotone increasing.
 
 
-
-We then show that these two functions satisfy $f in.not O(g)$ and $g in.not O(f)$.
+*We then show that these two functions satisfy $f in.not O(g)$ and $g in.not O(f)$.*
 
 Assume, to the contrary, that $f in O(g)$. 
 Then, we have $f(n) <= c g(n)$ for some $c > 0, N>0$ and all $n > N$.
 Let $n = 4 a_i - 1$ for some $i$.
 Therefore,
 $
-  f(n) - c g(n) &= e^(4 a_i - 1) - c (e^(2a_i) + (n - 2a_i)) \
-  &= e^(2a_i) (e^(2 a_i - 1) - c) - c(2a_i - 1)\
-  &>= e^(2a_i) (e^(2 a_i - 1) - c) - c e^(2a_i) \
-  &>= e^(2a_i) (e^(2 a_i - 1) - 2c)\
+  f(n) - c g(n) &= 3^(4 a_i - 1) - c (3^(2a_i) + (n - 2a_i)) \
+  &= 3^(2a_i) (3^(2 a_i - 1) - c) - c(2a_i - 1)\
+  &>= 3^(2a_i) (3^(2 a_i - 1) - c) - c 3^(2a_i) \
+  &>= 3^(2a_i) (3^(2 a_i - 1) - 2c)\
 $
-Since $2c$ is a constant, we can choose $i$ such that $e^(2 a_i - 1) - 2c > 0$ (an explicit formula would be $i > log_2((ln(2c) + 1)/2)$), so $f(n) > c g(n)$, which contradicts the assumption that $f in O(g)$.
+Since $2c$ is a constant, we can choose $i$ such that $3^(2 a_i - 1) - 2c > 0$ (an explicit formula would be $i > log_2((ln(2c) + 1)/2)$), so $f(n) > c g(n)$, which contradicts the assumption that $f in O(g)$.
 
 Assume, to the contrary, that $g in O(f)$. 
 Then, we have $g(n) <= c f(n)$ for some $c > 0, N>0$ and all $n > N$.
 Let $n = 2 a_i - 1$ for some $i$.
 Therefore,
 $
-  g(n) - c f(n) &= e^(2 a_i - 1) - c (e^(a_i) + (n - a_i)) \
-  &= e^(a_i) (e^(a_i - 1) - c) - c(a_i - 1)\
-  &>= e^(a_i) (e^(a_i - 1) - c) - c e^(a_i) \
-  &>= e^(a_i) (e^(a_i - 1) - 2c)\
+  g(n) - c f(n) &= 3^(2 a_i - 1) - c (3^(a_i) + (n - a_i)) \
+  &= 3^(a_i) (3^(a_i - 1) - c) - c(a_i - 1)\
+  &>= 3^(a_i) (3^(a_i - 1) - c) - c 3^(a_i) \
+  &>= 3^(a_i) (3^(a_i - 1) - 2c)\
 $
-Since $2c$ is a constant, we can choose $i$ such that $e^(a_i - 1) - 2c > 0$, which contradicts the assumption that $g in O(f)$.
+Since $2c$ is a constant, we can choose $i$ such that $3^(a_i - 1) - 2c > 0$, which contradicts the assumption that $g in O(f)$.
 Therefore, we conclude that $f in.not O(g)$ and $g in.not O(f)$.
 #align( right, $qed$)
 
