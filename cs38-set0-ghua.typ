@@ -47,15 +47,15 @@ Assume, to the contrary, that there exists two longest paths $P, Q$ of length $n
 Select $2$ vertices, $u in P, v in Q$ such that the shortest path $R$ between $u, v$ is the shortest among all possible choices of $u, v$.
 
 We first prove that $R$ does not intersect $P$ or $Q$. Assume, to the contrary (WLOG), that $R$ intersects $P$ at vertex $x$.
-Then, we can construct a new path $R'$ by replacing the segment of $P$ from $u$ to $x$ with the segment of $R$ from $x$ to $v$, which is shorter than $R$.
+Then, we can construct a new path $R'$ by removing the subpath of $P$ from $u$ to $x$ from $R$, leaving the subpath from $x$ to $v$, which is shorter than $R$.
 This contradicts the assumption that the selection $u, v$ gives the shortest $R$.
 Therefore, $R$ does not intersect $P$ or $Q$.
 
 Next, we construct a path longer than $P$ (and $Q$).
 Consider the path $P' + R + Q'$, where 
-- $P'$ is the segment of $P$ from one end of $P$ to $u$. Denote $P = P' + P''$, where $P''$ is the segment of $P$ from $u$ to the other end of $P$. Let $P'$ be the longer of the two segments. Therefore, since $|P| = |P'| + |P''|$, we have $|P'| >= ceil (|P|) / 2 ceil.r = ceil n/2 ceil.r$.
+- Denote $P = P_1 + P_2$, where $P_1$ is the subpath of $P$ from $u$ to one end of $P$, and $P_2$ is the subpath from $u$ to the other end of $P$. WLOG, $P'$ be the longer of the two segments, and $P''$ be the shorter of the two segments. Therefore, since $|P| = |P'| + |P''|$, we have $|P'| >= ceil (|P|) / 2 ceil.r = ceil n/2 ceil.r$.
 - $R$ is the shortest path from $u$ to $v$. It must have length $|R| >= 1$.
-- $Q'$ is the segment of $Q$ from $v$ to one end of $Q$, defined in an analogous way to $P'$. $|Q'| >= ceil n/2 ceil.r$.
+- $Q'$ is the subpath of $Q$ from $v$ to one end of $Q$, defined in an analogous way to $P'$. $|Q'| >= ceil n/2 ceil.r$.
 
 Therefore, $|P' + R + Q'| = ceil n/2 ceil.r + 1 + ceil n/2 ceil.r >= n+1 > |P| = |Q|$, which contradicts the assumption that $P, Q$ are longest paths in $G$.
 
@@ -65,7 +65,7 @@ Thus, we conclude that $P$ and $Q$ must share at least one vertex.
 
 = // 3
 _Warmup:_
-- Transitive means that if $a$ is related to $b$, and $b$ is related to $c$, then $a$ is related to $c$. Monotone increasing means that if $a > b$, then $f(a) > f(b)$. Functional composition means $(f compose g) (x) = f(g(x))$.
+- Transitive means that if $a$ is related to $b$, and $b$ is related to $c$, then $a$ is related to $c$. Monotone increasing means that if $a >= b$, then $f(a) >= f(b)$. Functional composition means $(f compose g) (x) = f(g(x))$.
 - $n! < n^n$
 
 ==
@@ -87,24 +87,24 @@ Therefore, we have $f in O(h)$.
 
 ==
 _Proof:_
-By definition of monotonicity, if $a > b, a, b in ZZ_+$, then $f(a) > f(b), g(a) > g(b)$.
+By definition of monotonicity, if $a > b, a, b in ZZ_+$, then $f(a) >= f(b), g(a) >= g(b)$.
 Since the ranges of $f$ and $g$ are both in $ZZ_+$, we have $f(n) > 0, g(m) > 0$ for all $n, m in ZZ_+$.
 Therefore,
 $
-  f(a) + g(a) &> f(a) + g(a) + (g(b) - g(a)) \
+  f(a) + g(a) &>= f(a) + g(a) + (g(b) - g(a)) \
   &= f(a) + g(b) \
-  &> f(a) + (f(b) - f(a)) + g(b)\
+  &>= f(a) + (f(b) - f(a)) + g(b)\
   &= f(b) + g(b) \
 $
 
 Therefore, $f+g$ is monotone increasing.
 
-Similarly, if $a > b, a, b in ZZ_+$, then $g(a) > g(b)$ and $g(a), g(b) in ZZ_+$ (in the domain of $f$), so we have $f(g(a)) > f(g(b))$ from the monotonicity of $f$.
+Similarly, if $a > b, a, b in ZZ_+$, then $g(a) >= g(b)$ and $g(a), g(b) in ZZ_+$ (in the domain of $f$), so we have $f(g(a)) >= f(g(b))$ from the monotonicity of $f$.
 Therefore, $f compose g$ is also monotonically increasing.
 #align(right, $qed$)
 
 
-==
+== PLEASE IGNORE
 _Proof:_
 By definition, $T(n) in n^(O(1)) => exists N, c: T(n) <= n^(c dot 1), forall n > N => T(n) in O(n^c)$.
 In the reverse direction, suppose $T(n) in O(n^k)$. By definition,
@@ -170,14 +170,14 @@ _Warmup:_
 _Proof:_
 Define the set 
 $
-  S = ZZ_+ inter (union.big_(i=1 \ i "is odd") [a_i, 2 a_i)) \
+  S = ZZ_+ inter (union.big_(i "is odd") [a_i, 2 a_i)) \
 $
 where $a_i = 2^i$. Since $2a_i = 2^(i+1) < 2^(i+2) = a_(i+2)$, $S$ is a disjoint union of intervals.
 Therefore, if $n in S$, it must be in exactly one of the intervals $[a_i, 2 a_i)$.
 
 Since $4 a_i = a_(i+2)$, we must have 
 $
-  S' = ZZ_+\\S = ZZ_+ inter (union.big_(i=1 \ i "is odd") [2a_i, 4a_i)) \
+  S' = ZZ_+\\S = ZZ_+ inter (union.big_(i "is odd") [2a_i, 4a_i)) \
 $
 Similarly, $S'$ is a disjoint union of intervals.
 If $n in S'$, it must be in exactly one of the intervals $[2a_i, 4a_i)$.
@@ -238,7 +238,7 @@ Therefore, both $f$ and $g$ are monotone increasing.
 
 Assume, to the contrary, that $f in O(g)$. 
 Then, we have $f(n) <= c g(n)$ for some $c > 0, N>0$ and all $n > N$.
-Let $n = 4 a_i - 1$ for some $i$.
+Let $n = 4 a_i - 1$ for some $i$. This formulation always exists since $a_i$ increases without bound.
 Therefore,
 $
   f(n) - c g(n) &= 3^(4 a_i - 1) - c (3^(2a_i) + (n - 2a_i)) \
@@ -246,7 +246,7 @@ $
   &>= 3^(2a_i) (3^(2 a_i - 1) - c) - c 3^(2a_i) \
   &>= 3^(2a_i) (3^(2 a_i - 1) - 2c)\
 $
-Since $2c$ is a constant, we can choose $i$ such that $3^(2 a_i - 1) - 2c > 0$ (an explicit formula would be $i > log_2((ln(2c) + 1)/2)$), so $f(n) > c g(n)$, which contradicts the assumption that $f in O(g)$.
+Since $2c$ is a constant, we can choose $i$ such that $3^(2 a_i - 1) - 2c > 0$ (an explicit formula would be $i > log_2((log_3(2c) + 1)/2)$), so $f(n) > c g(n)$ for some $n > N$, which contradicts the assumption that $f in O(g)$.
 
 Assume, to the contrary, that $g in O(f)$. 
 Then, we have $g(n) <= c f(n)$ for some $c > 0, N>0$ and all $n > N$.
