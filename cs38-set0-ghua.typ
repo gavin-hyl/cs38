@@ -170,7 +170,7 @@ _Warmup:_
 _Proof:_
 Define the set 
 $
-  S = ZZ_+ inter (union.big_(i "is odd") [a_i, 2 a_i)) \
+  S = ZZ_+ intersect (union.big_(i "is odd") [a_i, 2 a_i)) \
 $
 where $a_i = 2^i$. Since $2a_i = 2^(i+1) < 2^(i+2) = a_(i+2)$, $S$ is a disjoint union of intervals.
 Therefore, if $n in S$, it must be in exactly one of the intervals $[a_i, 2 a_i)$.

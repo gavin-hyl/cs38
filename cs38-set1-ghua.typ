@@ -28,18 +28,19 @@ let levels = nums.pos();
 =
 ==
 _Proof:_
+We perform strong induction on $n$. The base case is $n/b_i < 2$ for all $i$. In this case, $n$ is bounded by $2b$ by some $b$, so $T(n) = Theta(1) = Theta(b^w log(b)) = Theta(n^w log(n))$.
+
+For the inductive step, assume that the statement holds for all $n < N$.
+We then have
 $
   T(n) &= f(n) + sum_(i=1)^k T(n/b_i) \
   &= f(n) dot sum b_i^(-w) + sum_(i=1)^k T(n/b_i) \
   &= sum_(i=1)^k f(n) b_i^(-w) + T(n/b_i) \
   &= sum_(i=1)^k b_i^(-w) (f(n) + b_i^w T(n/b_i))\
-$
-We make the identification $a = b_i^w, b = b_i, d = w$.
-We then have $a = b^d$, which implies that
-$
-  T(n)&= sum_(i=1)^k b_i^(-w) O(n^w log(n)) \
-  &= O(n^w log(n)) sum_(i=1)^k b_i^(-w) \
-  &= O(n^w log(n)) \
+  &in sum_(i=1)^k b_i^(-w) (Theta(n^w) + b_i^w Theta((n/b_i)^w log(n/b_i))) \
+  &in sum_(i=1)^k b_i^(-w) (Theta(n^w) + Theta(n^w (log(n) - log(b_i)))) \
+  &in sum_(i=1)^k b_i^(-w) (Theta(n^w) + Theta(n^w log(n)) - Theta(n^w log(b_i))) \
+  &in Theta(n^w log(n)) \
 $
 #align(right, $qed$)
 
@@ -120,8 +121,9 @@ $
 _Proof:_
 As a lemma, we first describe an algorithm that converts a constrained 3SAT problem into an unconstrained 3SAT problem.
 #pseudocode-list(booktabs: true, title: smallcaps([3SAT-Expand]))[
-  - *input*: a 3SAT problem $p$ with n variables [$x_i$], $1<=i<=n$
+  - *input*: a 3SAT problem $p$ with n variables [$x_i$], a list of assignments $a$ of a subset of the variables.
   - *output*: a 3SAT problem $p'$ that is equivalent to $p$ with no constraints on variables
+  + $k <-$ maximum index of all the variables in $a$
   + if $k = 0$:
     + return $p$
   + else:
@@ -137,29 +139,55 @@ The resulting problem $p'$ is equivalent to the original problem $p$:
 We note that `3SAT-Expand` is a recursive algorithm that has runtime $T_1 (n) = T_1 (n-1) + O(1)$.
 Therefore, the runtime is $T_1 (n) = O(n)$.
 
-We describe the `3SAT-SP` (sparse 3SAT) algorithm below, and prove its runtime complexity is indeed $O(n^(2c+1))$
+We describe the `3SAT-Sparse` (sparse 3SAT) algorithm below, and prove its runtime complexity is indeed $O(n^(2c+1))$
 #pseudocode-list(booktabs: true, title: smallcaps[3SAT-Sparse])[
   - *input*: a 3SAT problem $p$ with n variables [$x_i$], $1<=i<=n$, $c$ as defined in the problem statement
   - *output*: a list of all possible assignments of the variables [$x_i$], $1<=i<=n$
-  + $A <-$ an empty valid assignment list
+  + $V <-$ an empty valid assignment list
   + if $n <= 2c$:
-    + $A <-$ a list of all feasible assignments of the variables [$x_i$], $1<=i<=n$
+    + $V <-$ a list of all feasible assignments of the variables [$x_i$], $1<=i<=n$
+    + return $V$
   + else:
+    + $A <-$ empty valid assignment list
     + $S <-$ a 3SAT comprising of all clauses in $p$ that only contain variables in ${x_1, dots, x_(n/2)}$
     + $S' <-$ a 3SAT comprising of all clauses in $p$ that only contain variables in ${x_(n/2+1), dots, x_n}$
-    + *for* each possible assignment $a$ of the variables in ${x_(n/2-c), dots, x_(n/2+c)}$
-      + $S_a <-$ 3SAT-Expand($S$, $a$)
-      + $S_a ' <-$ 3SAT-Expand($S'$, $a$)
-      + *if* both $S_a$ and $S_a '$ are satisfiable:
-        + sol $<-$ 3SAT-Sparse($S_a$, $c$) $+$ 3SAT-Sparse($S_a '$, $c$) // gavin是大蠢猪！！！
-        + append $A$ with sol
-  + return $A$
+    + $S'' <-$ a 3SAT comprising of all the clauses in $p$ that are not in $S$ or $S'$
+    + $A <-$ 3SAT-Sparse($S''$, $c$)
+    + *for* each assignment $a$ in $A$:
+      + $S_a <-$ 3SAT-Expand($S$, $a$[1:c])
+      + $S_a ' <-$ 3SAT-Expand($S'$, $a$[c+1:n])
+      + $"sol"$ $<-$ 3SAT-Sparse($S_a$, $c$)
+      + $"sol"'$ $<-$ 3SAT-Sparse($S_a '$, $c$)
+      + *for* each assignment $a_1$ in $"sol"$:
+        + *for* each assignment $a_2$ in $"sol"'$:
+          + $V <- a_1 + a_2$
+  + return $V$
 ]
 
-WLOG, in every clause, let $i <= j <= k$.
+WLOG, in every clause, let $i <= j <= k$, so $k - i <= c$.
 
 We first note that the algorithm is correct.
-- The only solutions returned are those that satisfy the original problem. 
+- We will use induction to show that the only solutions returned are those that satisfy the original problem. In the brute force case, the algorithm generates all feasible assignments. In the inductive step, assume that the recursive calls generate feasible assignments. Since the clauses in $S_a$ and $S_a '$ do not share variables, they are independent and their solutions can be concatenated to generate valid solutions. We have thus ensured that all clauses in $S, S', S''$ are satisfied, which is equivalent to the original problem. 
+- We will use induction to show that the solutions generated are all the solutions to the original problem. In the brute force case, this is trivial. In the inductive step, assume that recursive calls generate all feasible assignments. For every feasible assignment for the clauses in $S''$, all feasible assignments are generated for $S_a$ and $S_a '$ given that prior assignment, which, when combined, generate all feasible assignments for $S, S', S''$. We have thus ensured that we have all solution combinations to all clauses.
+
+Lastly, we compute the runtime of the algorithm.
+At each level, `3SAT-Sparse` and `3SAT-Expand` are called on two problems of size $n/2$ at most $2^c$ times. Note that the runtime of `3SAT-Expand` is $O(n)$. `3SAT-Sparse` is also called on $S''$ but that is an $O(1)$ operation since the length of $S''$ is at most $2c$.
+Concatenating the solutions of $"sol"$ and $"sol"'$ takes $O(n)$ time per operation
+
+Therefore, the work done at each level is $2^c O(n/2) + 2^c O(n/2) = O(n)$.
+The recurrence relationship is
+$
+  T(n) &= 2^c T(n/2) + 2^c T(n/2) + O(n) \
+  &= 2^(2c+1) T(n/2) + O(n)
+$
+
+We make the identification $a = 2^(2c+1), b = 2, d = 1$.
+Therefore, we have $b^d = 2 < a$, so the master theorem gives runtime
+$
+  T(n) = O(n^(2c+1))
+$
+
+#align(right, $qed$)
 
 =
 _Proof:_
@@ -220,6 +248,8 @@ Therefore, the algorithm correctly counts the number of inversions in the array.
 #align(right, $qed$)
 
 =
+
+
 
 #pagebreak()
 - Collaborators: Gio Huh
