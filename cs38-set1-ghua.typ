@@ -127,10 +127,10 @@ As a lemma, we first describe an algorithm that converts a constrained 3SAT prob
   + if $k = 0$:
     + return $p$
   + else:
-    + if $a[k] = T$:
-      + return ($x_k or x_k or x_k$) $and$ (3SAT-Expand($p, a[1:k-1]$))
+    + if $a[x_k] = T$:
+      + return ($x_k or x_k or x_k$) $and$ (`3SAT-Expand`($p, a[1:k-1]$))
     + else:
-      + return ($overline(x_k) or overline(x_k) or overline(x_k)$) $and$ (3SAT-Expand($p, a[1:k-1]$))
+      + return ($overline(x_k) or overline(x_k) or overline(x_k)$) $and$ (`3SAT-Expand`($p, a[1:k-1]$))
 ]
 The resulting problem $p'$ is equivalent to the original problem $p$:
 - in the case of $x_k$ should be $T$, the $(x_k or x_k or x_k)$ places the constraint that $x_k = T$, otherwise the entire expression is $F$. The rest of the clauses are unchanged, and thus the problem is equivalent.
@@ -152,12 +152,12 @@ We describe the `3SAT-Sparse` (sparse 3SAT) algorithm below, and prove its runti
     + $S <-$ a 3SAT comprising of all clauses in $p$ that only contain variables in ${x_1, dots, x_(n/2)}$
     + $S' <-$ a 3SAT comprising of all clauses in $p$ that only contain variables in ${x_(n/2+1), dots, x_n}$
     + $S'' <-$ a 3SAT comprising of all the clauses in $p$ that are not in $S$ or $S'$
-    + $A <-$ 3SAT-Sparse($S''$, $c$)
+    + $A <-$ `3SAT-Sparse`($S''$, $c$)
     + *for* each assignment $a$ in $A$:
-      + $S_a <-$ 3SAT-Expand($S$, $a$[1:c])
-      + $S_a ' <-$ 3SAT-Expand($S'$, $a$[c+1:n])
-      + $"sol"$ $<-$ 3SAT-Sparse($S_a$, $c$)
-      + $"sol"'$ $<-$ 3SAT-Sparse($S_a '$, $c$)
+      + $S_a <-$ `3SAT-Expand`($S$, $a$[1:c])
+      + $S_a ' <-$ `3SAT-Expand`($S'$, $a$[c+1:n])
+      + $"sol"$ $<-$ `3SAT-Sparse`($S_a$, $c$)
+      + $"sol"'$ $<-$ `3SAT-Sparse`($S_a '$, $c$)
       + *for* each assignment $a_1$ in $"sol"$:
         + *for* each assignment $a_2$ in $"sol"'$:
           + $V <- a_1 + a_2$
@@ -203,9 +203,9 @@ We first describe the algorithm in pseudocode:
     + return arr, $0$
   + else:
     + mid $<-floor n/2 floor.r$
-    + arr1, $d_1$ $<-$ Kendall(arr[0:mid])
-    + arr2, $d_2$ $<-$ Kendall(arr[mid+1:n])
-    + arr3, $d_3$ $<-$ KMerge(arr1, arr2)
+    + arr1, $d_1$ $<-$ `Kendall`(arr[0:mid])
+    + arr2, $d_2$ $<-$ `Kendall`(arr[mid+1:n])
+    + arr3, $d_3$ $<-$ `KMerge`(arr1, arr2)
     + return arr3, $d_1 + d_2 + d_3$
 ]
 
@@ -221,12 +221,12 @@ There is a subroutine, `KMerge`, that merges two sorted arrays and counts the nu
   + arr3 $<-$(new array of size m+n)
   + if arr1[0] < arr2[0]:
     + arr3[0] $<-$ arr1[0]
-    + arr_rem, $d_r$ $<-$ KMerge(arr1[1:m], arr2)
+    + arr_rem, $d_r$ $<-$ `KMerge`(arr1[1:m], arr2)
     + arr3[1:m+n] $<-$ arr_rem
     + return arr3, $d_r$
   + else:
     + arr3[0] $<-$ arr2[0]
-    + arr_rem, $d_r$ $<-$ KMerge(arr1, arr2[1:n])
+    + arr_rem, $d_r$ $<-$ `KMerge`(arr1, arr2[1:n])
     + arr3[1:m+n] $<-$ arr_rem
     + return arr3, $d_r + m$
 ]
@@ -242,6 +242,7 @@ This is because this is only time when the order of elements is not preserved.
 
 To move `arr2[0]` to the front of the merged array, we must move all elements of `arr1` that are greater than `arr2[0]` to the right.
 This is equivalent to swapping `arr2[0]` with all elements of `arr1` in reverse order, which precisely gives $m$ inversions.
+Moreover, since we process the elements one by one, no inversions are counted twice and no inversions are missed.
 
 Therefore, the algorithm correctly counts the number of inversions in the array.
 
@@ -251,7 +252,7 @@ Therefore, the algorithm correctly counts the number of inversions in the array.
 _Proof:_
 
 We modify the `Kendall` algorithm to produce the array $c$. Define a `Tuple` type as a tuple of three elements: value, original index, and a count of smaller elements to the right. The symbol $compose$ is defined as list concatenation.
-The `CountSmallerToRight` function performs the computations required to produce the array $c$.
+The `CountSmallerToRightMain` function performs the computations required to produce the array $c$.
 
 #pseudocode-list(booktabs: true, title: smallcaps[CountSmallerToRightMain])[
   - *input*: an array $a$ of size $n$
@@ -302,6 +303,10 @@ The `CountSmallerToRight` function calls itself recursively on two arrays of siz
 Therefore, the runtime is $T(n) = 2T(n/2) + O(n) = O(n log(n))$.
 
 We now show that the algorithm is correct.
+
+- For the `MergeCount` function, the sorting is correct since it is a direct copy of the `MERGE` function. The count of smaller to the right is correct since every time an element from the right is moved to the leftmost position, the count of smaller to the right is incremented, and carried over for all elements for the left array.
+- For the `CountSmallerToRight` function, the sorting is correct since it is a direct copy of the `MERGESORT` function. The count of smaller to the right is correct by induction. The base case is trivial. The inductive step is as follows: assume that the recursive calls return the correct counts. The `MergeCount` function ensures that the counts are preserved and incremented correctly. Therefore, the counts are correct.
+- For the `CountSmallerToRightMain` function, it is simply a wrapper for the `CountSmallerToRight` function, and the counts are generated correctly.
 
 
 #pagebreak()
