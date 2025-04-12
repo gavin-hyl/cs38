@@ -248,7 +248,60 @@ Therefore, the algorithm correctly counts the number of inversions in the array.
 #align(right, $qed$)
 
 =
+_Proof:_
 
+We modify the `Kendall` algorithm to produce the array $c$. Define a `Tuple` type as a tuple of three elements: value, original index, and a count of smaller elements to the right. The symbol $compose$ is defined as list concatenation.
+The `CountSmallerToRight` function performs the computations required to produce the array $c$.
+
+#pseudocode-list(booktabs: true, title: smallcaps[CountSmallerToRightMain])[
+  - *input*: an array $a$ of size $n$
+  - *output* an array $c$ of size $n$ satisfying $c[i] = sum_(j=i)^(n-1) 1(a[i] > a[j])$
+  + $b <-$ an array of tuples of size $n$
+  + for $i$ in $0$ to $n-1$:
+    + $b[i] <- (i, a[i], 0)$   
+  + $b$ $<-$ `CountSmallerToRight`($b$)
+  + $c <-$ an array of size $n$
+  + for each element $e$ in $b$:
+    + c[e.idx] $<-$ e.count
+  + return $c$
+]
+
+We now describe the `CountSmallerToRight` function in pseudocode.
+#pseudocode-list(booktabs: true, title: smallcaps[CountSmallerToRight])[
+  - *input*: an array of tuples $a$ of size $n$
+  - *output* an array of tuples $b$ of size $n$. The first elements are the sorted elements of $a$. The second elements form an array $c$ that satisfies $c[i] = sum_(j=i)^(n-1) 1(a[i] > a[j])$
+  + if $n = 1$:
+    + return $a$
+  + else:
+    + m $<-floor n/2 floor.r$
+    + $A_1$ $<-$ `CountSmallerToRight`(a[0:m])
+    + $A_2$ $<-$ `CountSmallerToRight`(a[m:n])
+    + $A_3$ $<-$ `MergeCount`($A_1, A_2, 0$)
+    + return $A_3$
+]
+
+
+#pseudocode-list(booktabs: true, title: smallcaps[MergeCount])[
+  - *input*: two sorted arrays of tuples $a, b$ of size $m, n$, count of inversions from previous merges $c$.
+  - *output*: an array of tuples $c$ of size $m+n$. The values are the sorted values of $a, b$. The counts form an array $d$ that satisfies if $d[j]$ is the $i$th element of $a$, $d[j] - a[i][1]$ counts the number of elements in $b$ that are smaller than $a[i]$.
+  + if $m = 0$:
+    + return $b$
+  + if $n = 0$:
+    + for each element $e$ in $a$:
+      + e.count $<-$ e.count + c
+    + return $a$
+  + if a.value $<=$ b.value
+    + a[0].count $<-$ a[0].count + c
+    + return $a[0] compose$ `MergeCount`($a[1:m], b, c$)
+  + else:
+    + return $b[0] compose$ `MergeCount`($a, b[1:n], c+1$)
+]
+
+We first note that the algorithm runs in $O(n log(n))$ time.
+The `CountSmallerToRight` function calls itself recursively on two arrays of size $n/2$. The `MergeCount` function runs in $O(n)$ time since it performs a single pass through each array and performs a constant amount of work per element.
+Therefore, the runtime is $T(n) = 2T(n/2) + O(n) = O(n log(n))$.
+
+We now show that the algorithm is correct.
 
 
 #pagebreak()
