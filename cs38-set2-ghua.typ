@@ -72,10 +72,47 @@ This gives a recurrence relation of the form $T(n) = T(n-1) + Theta(n)$.
 Since $T(1) = O(1)$ is the base case, we have $T(n) = sum_(k=0)^n Theta(k) = Theta(n(n-1)/2) = Theta(n^2)$.
 
 We now describe the average case runtime.
-At each level, the work done is at most a single pass through the array $a$, which gives $|a|$ comparisons and $|a|$ list append operations.
-This is $O(n)$.
-Each level divides the (sub)array into three parts, $L, E, G$.
-Define a "good" pivot as one that $max(|L|, |G|) <= (3|a|)/4$.
-This means that the pivot must lie between the first quantile and third quantile of the array.
-This occurs with probability $1/2$.
-By the lemma shown in lecture, the expected number of pivots needed such that 
+We conjecture that $EE[T(k)] <= c_1 (k log(k)) + c_2 k$ for some positive constants $c_1, c_2$.
+We use strong induction on the size of the array $a$.
+For the base case, we can easily select large constants such that the relation holds.
+For the inductive step, assume that $EE[T(k)] <= c_1 (k log(k)) + c_2 k$ for all $k <= n-1$, for some positive constants $c_1, c_2$.
+$
+  EE[T(n)] &= 1/n sum_(k=1)^(n-1) (EE[T(k) + EE(T(n-k))]) + 2n \
+  &= 1/n sum_(k=1)^(n-1) EE[T(k)] + 1/n sum_(k=1)^(n-1) EE[T(n-k)] + 2n \
+  &= 1/n sum_(k=1)^(n-1) EE[T(k)] + 1/n sum_(k=1)^(n-1) EE[T(k)] + 2n \
+  &= 2/n sum_(k=1)^(n-1) EE[T(k)] + 2n \
+  &<= 2/n sum_(k=1)^(n-1) (c_1 k log(k) + c_2 k) + 2n \
+$
+
+We now attempt to bound the $k log(k)$ term. We use an integral bound.
+$
+  I = integral x log(x) d x &= integral x d(x(log(x)) - 1) \
+  &= x^2 (log(x) - 1) - integral x(log(x) - 1) d x \
+  &= x^2 (log(x) - 1) - integral x log(x) d x + integral x d x \
+  &= x^2 (log(x) - 1) - I + x^2/2 \
+  I &= 1/2 x^2 (log(x) - 1) + x^2/4 \
+$
+
+Since $x log(x)$ is monotone increasing, we can bound the sum by the integral.
+$
+  sum_(k=1)^(n-1) k log(k) &<= integral_1^n x log(x) d x \
+  &= 1/2 n^2 (log(n) - 1) + n^2/4 \
+  &= 1/2 n^2 log(n) - n^2 / 4 \
+$
+
+Plugging this back into the original inequality yields
+$
+  EE[T(n)] &<= 2/n (c_1 (1/2 n^2 log(n) - n^2 / 4) + c_2 n(n-1)/2) + 2n \
+  &<= 2/n (c_1 (1/2 n^2 log(n) - n^2 / 4) + c_2 n^2/2) + 2n \
+  &= c_1 n log(n) - c_1/2 n + c_2 n + 2n \
+  &= c_1 n log(n) + (c_2 - c_1/2 + 2) n \
+$
+
+We may choose $c_1 = 4, c_2 = 2$.
+We first verify that the base case holds: $EE[T(1)] = 1 <= 4 dot 1 dot log(1) + 2 dot 1 = 2$.
+The inductive step then becomes $EE[T(n)] <= c_1 n log(n) + c_2 n$, which proves the conjecture.
+Therefore, the expected runtime is $O(n log(n))$.
+#align(right, $qed$)
+
+
+=
