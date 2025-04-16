@@ -45,8 +45,7 @@ In this problem, $compose$ denotes list concatenation.
   + return `QuickSort`($L$) + $E$ + `QuickSort`($G$)
 ]
 
-*Correctness*
-
+*Correctness*\
 _Proof:_
 We will demonstrate correctness by strong induction on the size of the array $a$.
 For the base case, $|a| = 1$, the array is trivially sorted.
@@ -58,8 +57,7 @@ Since all elements in $L$ are less than $p$, and all elements in $G$ are greater
 #align(right, $qed$)
 
 
-*Runtime*
-
+*Runtime*\
 We first describe the worst case runtime.
 In the worst case, the recursion minimally reduces the problem size.
 This can be achieved by always choosing the largest or smallest element as the pivot.
@@ -112,6 +110,52 @@ We may choose $c_1 = 4, c_2 = 2$.
 We first verify that the base case holds: $EE[T(1)] = 1 <= 4 dot 1 dot log(1) + 2 dot 1 = 2$.
 The inductive step then becomes $EE[T(n)] <= c_1 n log(n) + c_2 n$, which proves the conjecture.
 Therefore, the expected runtime is $O(n log(n))$.
+#align(right, $qed$)
+
+
+=
+*Algorithm*
+#pseudocode-list(booktabs: true, title: smallcaps[FFT3])[
+  - *Input*
+    - Coefficient representation of a polynomial $A(x)$ of degree $n-1$, where $n$ is a power of 3.
+    - $omega$, an $n$-th root of unity.
+  - *Output*
+    - $A(omega^0), dots, A(omega^(n-1))$
+  + if $n = 1$:
+    + return $A(1)$
+  + Let $A_0(x^3) = a_0 x^0 + a_3 x^3 + dots.c$
+  + Let $A'_1(x^3) = a_1 x^1 + a_4 x^3 + dots.c$
+  + Let $A'_2(x^3) = a_2 x^2 + a_5 x^3 + dots.c$
+  + Let $A_1(x^3) = x A_1(x^3)$
+  + Let $A_2(x^3) = x^2 A_2(x^3)$
+  + call `FFT3`($A_0$, $omega^3$) to get $A_0(omega^0), A_0(omega^3), dots, A_0(omega^(3(n-1)))$
+  + call `FFT3`($A_1$, $omega^3$) to get $A_1(omega^0), A_1(omega^3), dots, A_1(omega^(3(n-1)))$
+  + call `FFT3`($A_2$, $omega^3$) to get $A_2(omega^0), A_2(omega^3), dots, A_2(omega^(3(n-1)))$
+  + for $k = 0, dots, n-1$:
+    + $A(omega^k) = A_0(omega^(3k)) + omega A_1(omega^(3k)) + omega^2 A_2(omega^(3k))$
+  + return $A(omega^0), dots, A(omega^(n-1))$
+]
+
+
+*Correctness*\
+_Proof:_
+We will demonstrate correctness by strong induction on $n$.
+The base case is $n=1$, which is trivially correct since $A(1) = A(1)$.
+For the inductive step, assume correctness for all $n$ such that $n = 3^k$ for $k <= m$.
+Since $A_1, A_2, A_3$ are all polynomials of degree $< n$, we can apply the inductive hypothesis and conclude that the values returned by `FFT3`($A_0$, $omega^3$), `FFT3`($A_1$, $omega^3$), and `FFT3`($A_2$, $omega^3$) are correct. 
+We note that $A(x) = A_0 (x^3) + A'_1 (x^3) + A'_2(x^3) = A_0 (x^3) + x A_1 (x^3) + x^2 A_2(x^3)$.
+Therefore, the final step is correct by definition.
+#align(right, $qed$)
+
+
+*Runtime*\
+_Proof:_
+Let the runtime of `FFT3` be $T(n)$.
+At each level, the algorithm does $O(n)$ work (one loop of size $n$ with $O(1)$ work per iteration).
+The algorithm makes three recursive calls to `FFT3` with $n/3$ elements each.
+Therefore, the recurrence relation is $T(n) = 3T(n/3) + O(n)$.
+We make the identification with the master theorem: $a = 3$, $b = 3$, $d = 1$.
+Since $a = b^d$, we may conclude that $T(n) = O(n log(n))$.
 #align(right, $qed$)
 
 
