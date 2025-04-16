@@ -166,11 +166,11 @@ We describe the `3SAT-Sparse` (sparse 3SAT) algorithm below, and prove its runti
 
 WLOG, in every clause, let $i <= j <= k$, so $k - i <= c$.
 
-We first note that the algorithm is correct.
+*Correctness*
 - We will use induction to show that the only solutions returned are those that satisfy the original problem. In the brute force case, the algorithm generates all feasible assignments. In the inductive step, assume that the recursive calls generate feasible assignments. Since the clauses in $S_a$ and $S_a '$ do not share variables, they are independent and their solutions can be concatenated to generate valid solutions. We have thus ensured that all clauses in $S, S', S''$ are satisfied, which is equivalent to the original problem. 
 - We will use induction to show that the solutions generated are all the solutions to the original problem. In the brute force case, this is trivial. In the inductive step, assume that recursive calls generate all feasible assignments. For every feasible assignment for the clauses in $S''$, all feasible assignments are generated for $S_a$ and $S_a '$ given that prior assignment, which, when combined, generate all feasible assignments for $S, S', S''$. We have thus ensured that we have all solution combinations to all clauses.
 
-Lastly, we compute the runtime of the algorithm.
+*Runtime*
 At each level, `3SAT-Sparse` and `3SAT-Expand` are called on two problems of size $n/2$ at most $2^c$ times. Note that the runtime of `3SAT-Expand` is $O(n)$. `3SAT-Sparse` is also called on $S''$ but that is an $O(1)$ operation since the length of $S''$ is at most $2c$.
 Concatenating the solutions of $"sol"$ and $"sol"'$ takes $O(n)$ time per operation.
 
@@ -231,10 +231,12 @@ There is a subroutine, `KMerge`, that merges two sorted arrays and counts the nu
     + return arr3, $d_r + m$
 ]
 
+*Runtime*
 Note that the array-sorting algorithm is an exact copy of the `MergeSort` algorithm and thus functions correctly.
 Moreover, since the only added segments to the algorithm are at least one integer addition per recursion layer, which is $O(1)$, the algorithm is still $O(n log(n))$.
 We now proceed to demonstrate the correctness of the algorithm.
 
+*Correctness*
 The Kendall distance is equivalently defined as the number of inversions in the array.
 We will show that the `Kendall` algorithm correctly counts the number of inversions in the array.
 Note that all nonzero counts of inversions are counted in the `KMerge` function, in the `else` clause where the first element of the second array is less than the first element of the first array.
@@ -251,7 +253,7 @@ $
 $
 $kappa_1$ is counted in the first recursive call, $kappa_2$ is counted in the second recursive call, and $kappa_3$ is counted in the `KMerge` function, since we iterate over all $i$ and $j$. Whenever an element corresponding to $j$ is moved to the left, the increment count increases by $m$ since there are $m$ elements in the first array that are greater than $pi(j)$.
 
-Therefore, the algorithm correctly counts the number of inversions in the array.
+Therefore, since all inversions are counted and no inversions are double-counted, the algorithm correctly counts the number of inversions in the array.
 
 #align(right, $qed$)
 
@@ -305,12 +307,12 @@ We now describe the `CountSmallerToRight` function in pseudocode.
     + return $b[0] compose$ `MergeCount`($a, b[1:n], c+1$)
 ]
 
+*Runtime*
 We first note that the algorithm runs in $O(n log(n))$ time.
 The `CountSmallerToRight` function calls itself recursively on two arrays of size $n/2$. The `MergeCount` function runs in $O(n)$ time since it performs a single pass through each array and performs a constant amount of work per element.
 Therefore, the runtime is $T(n) = 2T(n/2) + O(n) = O(n log(n))$.
 
-We now show that the algorithm is correct.
-
+*Correctness*
 - For the `MergeCount` function, the sorting is correct since it is a direct copy of the `Merge` function. The count of smaller to the right is correct since every time an element from the right is moved to the leftmost position, the count of smaller to the right is incremented, and carried over for all elements for the left array.
 - For the `CountSmallerToRight` function, the sorting is correct since it is a direct copy of the `MergeSort` function. The count of smaller to the right is correct by induction. The base case is trivial. The inductive step is as follows: assume that the recursive calls return the correct counts. The `MergeCount` function ensures that the counts are preserved and incremented correctly. Therefore, the counts are correct.
 - For the `CountSmallerToRightMain` function, it is simply a wrapper for the `CountSmallerToRight` function, and the counts are generated correctly.
