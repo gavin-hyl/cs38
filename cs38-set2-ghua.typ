@@ -128,7 +128,10 @@ Therefore, the expected runtime is $O(n log(n))$.
   + $(s'_0, s'_1, dots, s'_(n/3-1)) = $ `FFT3`($(a_1, a_4, dots, a_(n-2)), omega^3$)
   + $(s''_0, s''_1, dots, s''_(n/3-1)) = $ `FFT3`($(a_2, a_5, dots, a_(n-1)), omega^3$)
   + for $j = 0$ to $n/3 - 1$:
-    + $r_j = s_j + $
+    + $r_j = s_j + omega^j s'_j + omega^(2j) s''_j$
+    + $r_(j + n/3) = s_j + e^((2 pi i)/3) omega^j s'_j + e^((2 pi i)/3) omega^(2j) s''_j$
+    + $r_(j + (2n)/3) = s_j + e^((4 pi i)/3) omega^j s'_j + e^((4 pi i)/3) omega^(2j) s''_j$
+  + return $(r_0, r_1, dots, r_(n-1))$
 ]
 
 
@@ -138,18 +141,19 @@ We will demonstrate correctness by strong induction on $n$.
 
 We first note that the $omega$ we chose satisfy the property that $omega^3$ is an $n/3$-th primitive root of unity.
 This is because $omega = e^((2 pi i) / n)$, and $omega^3 = e^((2 pi i) / (n\/3))$.
-Moreover, we note claim that for $k in {0, dots, n-1}$, $(omega^k)^3 = (omega^(k+ n/3))^3 = (omega^(k + (2n)/3))^3$.
-This ensures that the subproblems are $n/3$ length.
+Moreover, we claim that for $k in {0, dots, n-1}$, $(omega^k)^3 = (omega^(k+ n/3))^3 = (omega^(k + (2n)/3))^3$.
+This ensures that the sub-problems are valid and of $n/3$ length.
 
-The base case is $n=1$, which is trivially correct since $A(1) = A(1)$.
+The base case is $n=1$, which is trivially correct since $M_n (1) = I_1$.
 For the inductive step, assume correctness for all $n$ such that $n = 3^k$ for $k <= m$.
-Since $A_1, A_2, A_3$ are all polynomials of degree $< n$, we can apply the inductive hypothesis and conclude that the values returned by `FFT3`($A_0$, $omega^3$), `FFT3`($A_1$, $omega^3$), and `FFT3`($A_2$, $omega^3$) are correct. 
-We note that $A(x) = A_0 (x^3) + A'_1 (x^3) + A'_2(x^3) = A_0 (x^3) + x A_1 (x^3) + x^2 A_2(x^3)$.
+As one may see in the picture below, rows $0, 1, dots, n/3 - 1$ can be written as the sum of three matrix-vector products (same color matrix/vectors in the picture).
+Since we assumed correctness, we know that the individual products are correct.
+Since the algorithm computes the sum of three correct products according to the definition of the overall matrix-vector product, all the rows are computed correctly.
+#align(center, image("figures/set2/p2.jpg"))
+The same holds for the $j + n/3$ and $j + (2n)/3$ rows.
 Therefore, the final step is correct by definition.
 #align(right, $qed$)
 
-A pictorial representation is as follows:
-#image("figures/set2/p2.jpg")
 
 *Runtime*\
 _Proof:_
