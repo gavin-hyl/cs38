@@ -114,32 +114,33 @@ Therefore, the expected runtime is $O(n log(n))$.
 
 
 =
+
 *Algorithm*
 #pseudocode-list(booktabs: true, title: smallcaps[FFT3])[
   - *Input*
-    - Coefficient representation of a polynomial $A(x)$ of degree $n-1$, where $n$ is a power of 3.
-    - $omega$, an $n$-th root of unity.
+    - An array $a = (a_0, a_1, dots, a_(n-1))$, for $n$ a power of $2$
+    - A primitive $n$th root of unity, $omega$.
   - *Output*
-    - $A(omega^0), dots, A(omega^(n-1))$
+    - $M_n (omega) a$
   + if $n = 1$:
-    + return $A(1)$
-  + Let $A_0(x^3) = a_0 x^0 + a_3 x^3 + dots.c$
-  + Let $A'_1(x^3) = a_1 x^1 + a_4 x^3 + dots.c$
-  + Let $A'_2(x^3) = a_2 x^2 + a_5 x^3 + dots.c$
-  + Let $A_1(x^3) = x A_1(x^3)$
-  + Let $A_2(x^3) = x^2 A_2(x^3)$
-  + call `FFT3`($A_0$, $omega^3$) to get $A_0(omega^0), A_0(omega^3), dots, A_0(omega^(3(n-1)))$
-  + call `FFT3`($A_1$, $omega^3$) to get $A_1(omega^0), A_1(omega^3), dots, A_1(omega^(3(n-1)))$
-  + call `FFT3`($A_2$, $omega^3$) to get $A_2(omega^0), A_2(omega^3), dots, A_2(omega^(3(n-1)))$
-  + for $k = 0, dots, n-1$:
-    + $A(omega^k) = A_0(omega^(3k)) + omega A_1(omega^(3k)) + omega^2 A_2(omega^(3k))$
-  + return $A(omega^0), dots, A(omega^(n-1))$
+    + return $a$
+  + $(s_0, s_1, dots, s_(n/3-1)) = $ `FFT3`($(a_0, a_3, dots, a_(n-3)), omega^3$)
+  + $(s'_0, s'_1, dots, s'_(n/3-1)) = $ `FFT3`($(a_1, a_4, dots, a_(n-2)), omega^3$)
+  + $(s''_0, s''_1, dots, s''_(n/3-1)) = $ `FFT3`($(a_2, a_5, dots, a_(n-1)), omega^3$)
+  + for $j = 0$ to $n/3 - 1$:
+    + $r_j = s_j + $
 ]
 
 
 *Correctness*\
 _Proof:_
 We will demonstrate correctness by strong induction on $n$.
+
+We first note that the $omega$ we chose satisfy the property that $omega^3$ is an $n/3$-th primitive root of unity.
+This is because $omega = e^((2 pi i) / n)$, and $omega^3 = e^((2 pi i) / (n\/3))$.
+Moreover, we note claim that for $k in {0, dots, n-1}$, $(omega^k)^3 = (omega^(k+ n/3))^3 = (omega^(k + (2n)/3))^3$.
+This ensures that the subproblems are $n/3$ length.
+
 The base case is $n=1$, which is trivially correct since $A(1) = A(1)$.
 For the inductive step, assume correctness for all $n$ such that $n = 3^k$ for $k <= m$.
 Since $A_1, A_2, A_3$ are all polynomials of degree $< n$, we can apply the inductive hypothesis and conclude that the values returned by `FFT3`($A_0$, $omega^3$), `FFT3`($A_1$, $omega^3$), and `FFT3`($A_2$, $omega^3$) are correct. 
@@ -147,6 +148,8 @@ We note that $A(x) = A_0 (x^3) + A'_1 (x^3) + A'_2(x^3) = A_0 (x^3) + x A_1 (x^3
 Therefore, the final step is correct by definition.
 #align(right, $qed$)
 
+A pictorial representation is as follows:
+#image("figures/set2/p2.jpg")
 
 *Runtime*\
 _Proof:_
@@ -160,3 +163,63 @@ Since $a = b^d$, we may conclude that $T(n) = O(n log(n))$.
 
 
 =
+We may modify the DFS algorithm to achieve this goal.
+
+*Algorithm*
+
+#pseudocode-list(booktabs: true, title: smallcaps[LongPathDFS])[
+  - *Input:* A directed graph $G = (V, E)$.
+  - *Output:* The months required to build the house $m$.
+  + sources = elements of $V$ with no incoming edges
+  + for all $v in V$:
+    + visited($v$) = false
+    + dist($v$) = $1$
+  + $P <-$ empty list
+  + for all $v in$ sources:
+    + if not visited($v$):
+      + `LongPathExplore`($G$, $v$, $P$)
+  + $P <- "reverse"(P)$
+  + for each $v in P$:
+    + for each $(v, u) in E$:
+      + dist($u$) = max(dist($u$), dist($v$) + 1)
+  + return max(dist($v$) for all $v in V$)
+]
+
+#pseudocode-list(booktabs: true, title: smallcaps[LongPathExplore])[
+  - *Input:* A directed graph $G = (V, E)$, a vertex $v$, a post-order $P$
+  - *Output:* The appended post-order $P$.
+  + visited($v$) = true
+  + for all $(v, u) in E$:
+    + if not visited($u$):
+      + $P <- $ `LongPathExplore`($G$, $u$, $P$)
+  + $P <- P + v$
+  + return $P$
+]
+
+*Correctness* \
+_Proof:_
+It is easy to see that the algorithm's post-ordering is correct since it is a copy of the DFS post-ordering discussed in lecture.
+We proceed to show that the algorithm correctly computes the longest path in the graph.
+Since we have constructed the topological order, at every $v$, we know that all of $v$'s ancestors have been visited. 
+In each inner loop, we consider which path is longer: the path from a source to $v$ to $u$, or any other path from a source to $u$.
+Therefore, before we visit $u$, we know that all possible paths from a source to $u$ have been considered (since all ancestors have been processed.)
+We have taken the maximum of all possible paths from a source to $u$.
+Therefore, the algorithm correctly computes the longest path in the graph.
+#align(right, $qed$)
+
+*Runtime* \
+The DFS post-ordering is $O(|V| + |E|)$.
+After that, we iterate through the post-ordering exactly once, and for each vertex, we iterate through its edges exactly once.
+Therefore, we touch on every vertex and edge exactly once, which is $O(|V| + |E|)$.
+Therefore, the total runtime is $O(|V| + |E|)$.
+#align(right, $qed$)
+
+=
+We may modify the DFS algorithm to achieve this goal.
+
+We thus don't need to keep track of all the vertices in the graph at once.
+
+#pagebreak()
+- Collaborators: Gio Huh
+- Link to GitHub repository (tracks changes): https://github.com/gavin-hyl/cs38
+- G-drive link for scratchpad: https://drive.google.com/file/d/1fl5h462QWzYFWYphbSEDJuUL8c2fY3bx/view?usp=sharing
