@@ -221,7 +221,106 @@ Therefore, the total runtime is $O(|V| + |E|)$.
 =
 We may modify the DFS algorithm to achieve this goal.
 
-We thus don't need to keep track of all the vertices in the graph at once.
+*Algorithm* \
+#pseudocode-list(booktabs: true, title: smallcaps[OddCycleDFS])[
+  - *Input:* A directed graph $G = (V, E)$
+  - *Output:* An odd cycle $C$ if any exist, otherwise $bot$.
+  + for all $v in V$:
+    + visited($v$) = false
+    + parity($v$) = $0$
+    + parent($v$) = $bot$
+  + SCCs = `SCC`($G$) \/\/ _As described in lecture, this takes $O(|V| + |E|)$ time._
+  + for all $S$ in SCCs:
+    + $v$ is a random vertex in $S$
+    + $P_e, P_o <- $ `OddCycleExplore`($G$, $v$, $bot$)
+    + if $P_e, P_o = bot, bot$:
+      + remove $S$ from SCCs
+      + continue
+    + $w <- "end"(P_e)$
+    + $P_r$ is the path from $w$ to $v$ constructed by running regular DFS on $S$ with $w$ as the root node.
+    + if $|P_r|$ is odd:
+      + return $P_r + P_e$
+    + else:
+      + return $P_r + P_o$
+  + return $bot$
+]
+
+#pseudocode-list(booktabs: true, title: smallcaps[OddCycleExplore])[
+  - *Input:* A directed SCC $G = (V, E)$, a vertex $v$, a parent $p$
+  - *Output:* Two paths from the root node of the exploration tree to a certain node. $P_e$ is an even-length path from the root to the node, and $P_o$ is an odd-length path from the root to the node. $bot, bot$ is returned if no such paths exist.
+  + $"visited"(v) = "true"$
+  + $"parent"(v) = p$
+  + if $v != bot$
+    + $"parity"(v) = ("parity"(p) + 1) mod 2$
+  + for all $(v, u) in E$:
+    + if $"visited"(u) = "false"$:
+      + $C <- $ `OddCycleExplore`($G$, $u$, $v$)
+      + if $C != bot$:
+        + return $C$
+    + else if $"parity"(u) = "parity"(v)$:
+      + $P_u$ is the path from the root to $u$ that can be constructed by tracing $u$'s parents to the root node. 
+      + $P_v$ is the path from the root to $u$ that can be constructed by tracing $v$'s parents to the root node, and appending the edge $(v, u)$ to the end of the path.
+      + if $P_u$ is even-length and $P_v$ is odd-length:
+        + return $(P_u, P_v)$
+      + else:
+        + return $(P_v, P_u)$
+  + return $(bot, bot)$
+]
+
+#pseudocode-list(booktabs: true, title: smallcaps[OddCycleFromWalk])[
+  - *Input:* A closed odd-length walk $W = (v_0, v_1, dots, v_n)$.
+  - *Output:* An odd-length cycle $C$ if any exist, otherwise $bot$.
+  + if $|W| = 1$ or $W$ is simple:
+    + return $W$
+  + else:
+    + $W_1 = (v_i, v_(i+1), dots, v_j)$ is the walk from $v_i$ to $v_j$.
+    + $W_2 = (v_j, v_(j+1), dots, v_n = v_0, v_1, dots, v_i)$ is walk from $v_j$ to $v_i$.
+    + if $W_1$ is odd-length and $W_2$ is even-length:
+      + return `OddCycleFromWalk`($W_1$)
+    + else:
+      + return `OddCycleFromWalk`($W_2$)
+]
+
+
+*Correctness* \
+We first prove a lemma: if there an odd-length closed walk, then there exists an odd-length cycle.
+
+_Proof:_
+Denote the closed walk as $v_0, v_1, ..., v_n = v_0$.
+If there is no repeat, then the walk is a cycle.
+if there are repeats, let $v_i = v_j$ with $i < j$.
+Then the walk can be split into two walks: $v_i, v_(i+1), ..., v_j$ and $v_j, v_(j+1), ..., v_n, v_1, dots, v_i$.
+Since these two walks are disjoint, they must be even-length and odd-length.
+Select the odd-length walk and repeat this process.
+Since the walk is finite and its length is decreasing, we will eventually reach a point where the walk is simple ($|W| = 1$).
+#align(right, $qed$)
+
+
+We then prove the correctness of the algorithm.
+
+_Proof:_
+The `SCC` algorithm described in class can be assumed to correctly find all strongly connected components in the graph.
+The DFS structure is also unchanged, so without premature returns, the algorithm will explore all vertices in the SCC (property of DFS).
+We will now demonstrate the key lemma: 
+_if $u$ and $v$ belong in an odd-length cycle in an SCC, _.
+
+We will prove this by proving implications in both directions.
+Denote a path from $a$ to $b$ as $P_(a b)$.
+The paths of interest are $P_(r u)$, $P_(r v)$, $P_(u v)$, and $P_(v u)$.
+- Let us first prove the forward direction.
+  Since $u$ and $v$ are in an odd-length cycle, let one of $P_(u v)$ and $P_(v u)$ be an odd-length path, and the other is an even-length path.
+  (This is possible since we can split the cycle.)
+  WLOG, assume $P_(u v)$ is odd-length and $P_(v u)$ is even-length.
+  Arbitrarily fix $P_(r u), P_(r v)$.
+  - If $P_(r u)$ has the same parity as $P_(r v)$, then $P_(r u) + P_(u v)$ contains $u$ and has the opposite parity of $P_(r v)$, which satisfies the lemma.
+  - If $P_(r u)$ has the opposite parity as $P_(r v)$, then $P_(r u)$ has the opposite parity of $P_(r v) + P_(v u)$ (which contains $v$), which also satisfies the lemma.
+  Thus, we have proven the forward direction.
+- Let us then prove the backwards direction.
+  WLOG, let $P_(r u 0)$ be even-length, $P_(r u 1)$ be odd-length.
+  - Suppose $P_(r u 0)$ contains $v$.
+
+
+
 
 #pagebreak()
 - Collaborators: Gio Huh
