@@ -268,19 +268,23 @@ We may modify the DFS algorithm to achieve this goal.
 ]
 
 #pseudocode-list(booktabs: true, title: smallcaps[OddCycleFromWalk])[
-  - *Input:* A closed odd-length walk $W = (v_0, v_1, dots, v_n)$.
-  - *Output:* An odd-length cycle $C$ if any exist, otherwise $bot$.
-  + if $|W| = 1$ or $W$ is simple:
-    + return $W$
-  + else:
-    + $W_1 = (v_i, v_(i+1), dots, v_j)$ is the walk from $v_i$ to $v_j$.
-    + $W_2 = (v_j, v_(j+1), dots, v_n = v_0, v_1, dots, v_i)$ is walk from $v_j$ to $v_i$.
-    + if $W_1$ is odd-length and $W_2$ is even-length:
-      + return `OddCycleFromWalk`($W_1$)
+  - *Input:* closed odd-length walk $W = (v_0, v_1, dots, v_n)$
+  - *Output:* an odd cycle $C$ if one exists, otherwise $bot$.
+  + let firstEven, firstOdd be empty maps from vertex → index.
+  + for $i$ from $0$ to $n$:
+    + let $v$ be $W[i]$.
+    + if $i$ is even
+      + if $"firstOdd"(v)$ exists:
+        + return $C = W["firstOdd"(v)..i]$.
+      + if $"firstEven"(v)$ does not exist:
+        + $"firstEven"(v) <- i$
     + else:
-      + return `OddCycleFromWalk`($W_2$)
+      + if $"firstEven"(v) <- i$ exists:
+        + return $C = W["firstEven"(v)..i]$.
+      + if $"firstOdd"[v]$ does not exist:
+        + $"firstOdd"[v] <- i$
+  + return $bot$.
 ]
-
 
 *Correctness* \
 We first prove a lemma: _if there an odd-length closed walk, then there exists an odd-length cycle._
@@ -292,8 +296,7 @@ if there are repeats, let $v_i = v_j$ with $i < j$.
 Then the walk can be split into two walks: $v_i, v_(i+1), ..., v_j$ and $v_j, v_(j+1), ..., v_n, v_1, dots, v_i$.
 Since these two walks are disjoint, they must be even-length and odd-length.
 Select the odd-length walk and repeat this process.
-Since the walk is finite and its length is decreasing, we will eventually reach a point where the walk is simple ($|W| = 1$).
-This also demonstrates the correctness of the `OddCycleFromWalk` algorithm.
+Since the walk is finite and its length is decreasing, we will eventually reach a point where the walk is simple (worst case, $|W| = 1$).
 #align(right, $qed$)
 
 
@@ -323,7 +326,11 @@ Therefore, the lemma holds.
 
 In the `OddCycleExplore` algorithm, $"parity"$ correctly keeps track of the parity of the length of the path from the root node to the current node.
 Therefore, if two nodes have the same parity and there is an edge between them, that must imply there are two paths from the root node to one node, of different parity.
-Since DFS examines all edges, we can be sure all potential path's parities are consideed.
+Since DFS examines all edges, we can be sure all potential path's parities are considered.
+
+For the `OddCycleFromWalk` algorithm, we maintain two maps: `firstEven` and `firstOdd`, which keep track of the first time we see a vertex at an even or odd index.
+The first time we see the same vertex at differing parities, we can immediately know that a closed odd walk was performed between the first and second occurrences of the vertex.
+
 Therefore, the algorithm correctly computes the odd-length cycle in the graph.
 #align(right, $qed$)
 
@@ -331,7 +338,10 @@ Therefore, the algorithm correctly computes the odd-length cycle in the graph.
 The `SCC` algorithm takes $O(|V| + |E|)$ time.
 Since we only return prematurely from `OddCycleExplore` compared to standard DFS explore, the DFS explore takes $O(|V| + |E|)$ time plus the time to construct the paths.
 The paths are at most the size of the SCC, which is $O(|V| + |E|)$.
-The `OddCycleFromWalk` algorithm takes $O(|V| + |E|)$ time to construct the cycle.
+The `OddCycleFromWalk` algorithm touches each vertex of the walk exactly once.
+All map lookups and updates take $O(1)$ on average.
+Constructing the cycle takes at most $O(n)$ time where $n$ is the number of vertices in the walk.
+Hence the procedure runs in $O(|V| + |E|)$ time.
 Therefore, the total runtime is $O(|V| + |E|)$.
 #align(right, $qed$)
 
