@@ -239,9 +239,9 @@ We may modify the DFS algorithm to achieve this goal.
     + $w <- "end"(P_e)$
     + $P_r$ is the path from $w$ to $v$ constructed by running regular DFS on $S$ with $w$ as the root node.
     + if $|P_r|$ is odd:
-      + return $P_r + P_e$
+      + return `OddCycleFromWalk`($P_r + P_e$)
     + else:
-      + return $P_r + P_o$
+      + return `OddCycleFromWalk`($P_r + P_o$)
   + return $bot$
 ]
 
@@ -283,7 +283,7 @@ We may modify the DFS algorithm to achieve this goal.
 
 
 *Correctness* \
-We first prove a lemma: if there an odd-length closed walk, then there exists an odd-length cycle.
+We first prove a lemma: _if there an odd-length closed walk, then there exists an odd-length cycle._
 
 _Proof:_
 Denote the closed walk as $v_0, v_1, ..., v_n = v_0$.
@@ -293,36 +293,49 @@ Then the walk can be split into two walks: $v_i, v_(i+1), ..., v_j$ and $v_j, v_
 Since these two walks are disjoint, they must be even-length and odd-length.
 Select the odd-length walk and repeat this process.
 Since the walk is finite and its length is decreasing, we will eventually reach a point where the walk is simple ($|W| = 1$).
+This also demonstrates the correctness of the `OddCycleFromWalk` algorithm.
 #align(right, $qed$)
 
 
-We then prove the correctness of the algorithm.
+We then prove the correctness of the main algorithm.
 
 _Proof:_
 The `SCC` algorithm described in class can be assumed to correctly find all strongly connected components in the graph.
 The DFS structure is also unchanged, so without premature returns, the algorithm will explore all vertices in the SCC (property of DFS).
 We will now demonstrate the key lemma: 
-_if $u$ and $v$ belong in an odd-length cycle in an SCC, _.
+_an SCC has an odd-length cycle containing $v$ iff there exists both an odd and even length path from the root node $v$ in the SCC._
 
 We will prove this by proving implications in both directions.
-Denote a path from $a$ to $b$ as $P_(a b)$.
-The paths of interest are $P_(r u)$, $P_(r v)$, $P_(u v)$, and $P_(v u)$.
-- Let us first prove the forward direction.
-  Since $u$ and $v$ are in an odd-length cycle, let one of $P_(u v)$ and $P_(v u)$ be an odd-length path, and the other is an even-length path.
-  (This is possible since we can split the cycle.)
-  WLOG, assume $P_(u v)$ is odd-length and $P_(v u)$ is even-length.
-  Arbitrarily fix $P_(r u), P_(r v)$.
-  - If $P_(r u)$ has the same parity as $P_(r v)$, then $P_(r u) + P_(u v)$ contains $u$ and has the opposite parity of $P_(r v)$, which satisfies the lemma.
-  - If $P_(r u)$ has the opposite parity as $P_(r v)$, then $P_(r u)$ has the opposite parity of $P_(r v) + P_(v u)$ (which contains $v$), which also satisfies the lemma.
-  Thus, we have proven the forward direction.
-- Let us then prove the backwards direction.
-  WLOG, let $P_(r u 0)$ be even-length, $P_(r u 1)$ be odd-length.
-  - Suppose $P_(r u 0)$ contains $v$.
+Denote a path from $a$ to $b$ as $P_(a b)$. Let the root node be $r$.
+- If there exists an odd cycle, take another point on the cycle to be $u$. Then, one of $P_(u v), P_(v u)$ must be odd and the other even. Since we are in an SCC, there exists paths $P_(r u), P_(r v)$.
+  - If $P_(u v)$ is odd
+    - If $P_(r u), P_(r v)$ have the same parity, then $P_(r u) + P_(u v)$ and $P_(r v)$ are two paths from $r$ to $v$ of different parity.
+    - If $P_(r u), P_(r v)$ have different parity, then $P_(r u)$ is even and $P_(r v) + P_(v u)$ are two paths from $r$ to $u$ of different parity.
+  - The same holds for $P_(v u)$ being odd.
 
+
+- If there are both odd and even paths $P_(r v 0), P_(r v 1)$, then we can construct a odd closed walk by considering the parity of $P_(v r)$, which must exist since we are in an SCC.
+  - If $P_(v r)$ is even, then $W = P_(r v 1) + P_(v r)$ is odd.
+  - If $P_(v r)$ is odd, then $W = P_(r v 0) + P_(v r)$ is odd.
+  We may then construct a cycle using the algorithm `OddCycleFromWalk`.
+Therefore, the lemma holds.
+#align(right, $qed$)
+
+In the `OddCycleExplore` algorithm, $"parity"$ correctly keeps track of the parity of the length of the path from the root node to the current node.
+Therefore, if two nodes have the same parity and there is an edge between them, that must imply there are two paths from the root node to one node, of different parity.
+Since DFS examines all edges, we can be sure all potential path's parities are consideed.
+Therefore, the algorithm correctly computes the odd-length cycle in the graph.
+#align(right, $qed$)
+
+*Runtime* \
+The `SCC` algorithm takes $O(|V| + |E|)$ time.
+Since we only return prematurely from `OddCycleExplore` compared to standard DFS explore, the DFS explore takes $O(|V| + |E|)$ time plus the time to construct the paths.
+The paths are at most the size of the SCC, which is $O(|V| + |E|)$.
+The `OddCycleFromWalk` algorithm takes $O(|V| + |E|)$ time to construct the cycle.
+Therefore, the total runtime is $O(|V| + |E|)$.
+#align(right, $qed$)
 
 
 
 #pagebreak()
-- Collaborators: Gio Huh
-- Link to GitHub repository (tracks changes): https://github.com/gavin-hyl/cs38
-- G-drive link for scratchpad: https://drive.google.com/file/d/1fl5h462QWzYFWYphbSEDJuUL8c2fY3bx/view?usp=sharing
+Collaborators: Gio Huh
