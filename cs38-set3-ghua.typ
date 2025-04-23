@@ -108,8 +108,8 @@ Therefore, $I$ is not satisfiable.
 ]
 
 #pseudocode-list(booktabs: true, title: smallcaps[2SATExplore])[
-  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set a true, a partial fixed solution $"sol"$, and a map of the visited nodes $"visited"$.
-  - *Output:* The new assignments that are implied by setting $v$ to true, and the updated map of visited nodes.
+  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set a true, a partial fixed solution $"sol"$, and a map of the visited vertices $"visited"$.
+  - *Output:* The new assignments that are implied by setting $v$ to true, and the updated map of visited vertices.
   + $"visited"[v] = "visited"[overline(v)] = T$
   + $"sol"[v] = T$
   + $"sol"[overline(v)] = F$
@@ -128,7 +128,7 @@ Therefore, $I$ is not satisfiable.
 _Proof:_
 `2SATExplore` constructs a DFS tree and checks for consistency.
 It assumes that the root vertex is true and cascades the implications.
-Since all edges are checked and no modifications are made to the checked nodes after they are first checked, any returned solution is guaranteed to be consistent given that the assumption is consistent.
+Since all edges are checked and no modifications are made to the checked vertices after they are first checked, any returned solution is guaranteed to be consistent given that the assumption is consistent.
 
 We claim that at the end of every loop, all vertices in $C$ received an assignment that is part of a satisfying assignment.
 We prove this with induction.
@@ -177,7 +177,7 @@ Therefore, the algorithm runs in $O(|V|+|E|)$ time.
 *Algorithm*
 #pseudocode-list(booktabs: true, title: smallcaps[FindBottleneck])[
   - *Input:* An undirected graph $G = (V, E)$ with edge lengths $w(e)$, a vertex $x in V$
-  - *Output:* The bottleneck distances from $x$ to all other nodes.
+  - *Output:* The bottleneck distances from $x$ to all other vertices.
   + $g(x) = 0, g(x) = bot$
   + $g(y) = oo, p(y) = bot space (forall y != x)$
   + $R = {}$ is a set
@@ -200,14 +200,25 @@ _Proof:_
 We claim that each time a node is deleted from $Q$, its $g$ value is correctly set.
 We will prove this with induction.
 The base case is trivial: $g(x)$ has an empty path to itself and thus has a $g$ of $0$.
-For the inductive step, assume that all nodes in $R$ have their bottleneck distances set correctly.
-Since all nodes that are accessible from the nodes in $R$ are either in $R$ or in $Q$ (since all nodes are placed immediately on $Q$ upon discovery), all alternative paths from $x$ to $v$ (the ones that are not defined by tracing back parents starting from $v$) must pass through $R$ and optionally the nodes in $Q$.
-- If a path $p$ only consists of $v$ and nodes vertices in $R$, then $h(p)$ is correctly considered since processing all edges happens immediately after being placed into $R$, and
-$ h(p) = max{w_1, dots, w_n} = max{max{w_1, dots, w_(n-1)}, w_n} = max{g(u), w(u, v)} $
-where $u$ is a node deleted from $Q$.
+For the inductive step, assume that all vertices in $R$ have their bottleneck distances set correctly.
+Since all vertices that are accessible from the vertices in $R$ are either in $R$ or in $Q$ (since all vertices are placed immediately on $Q$ upon discovery), all alternative paths from $x$ to $v$ (the ones that are not defined by tracing back parents starting from $v$) must pass through $R$ and optionally the vertices in $Q$
+We will show an alternative path $p$ must have $g(v) <= h(p)$.
+- If a path $p$ only consists of $v$ and vertices in $R$, then $h(p)$ of all other potential paths are considered. 
+  Let the node before $v$ be $u in R$.
+  By the inductive hypothesis, $g(u)$ is correct.
+  $ h(p) = max{w_1, dots, w_n} = max{max{w_1, dots, w_(n-1)}, w_n} = max{g(u), w(u, v)} $
+  Therefore, all $h(p)$ for arbitrary $u in R$ are correctly considered and compared, and the minimum is chosen and sets $g(v)$
+- If a path $p$ consists of $v$, vertices in $R$, and vertices in $Q$, we will show that $h(p) >= g(v)$
+  Assume, to the contrary, that $h(p) < g(v)$.
+  Since removing a vertex cannot increase $h$, we know that $h(p') < g(v)$, where $p'$ is the subpath from $x$ to the first vertex in $Q$, call it $u$.
+  $g(u) <= h(p')$ since $g$ is correct on $R$ and all possible $p'$ have been considered when the vertices were placed on $R$.
+  This gives $g(u) <= h(p') < g(v)$, which contradicts the fact that $v$ was removed from $Q$, not $u$.
+Therefore, $g(v)$ is correctly set when it is removed from $Q$. 
+#align(right, $qed$)
 
 *Runtime* \
 _Proof:_
 The structure of this code is exactly the same as Dijkstra's, and the only difference is how the keys are constructed.
 Other aspects, such as processing the priority queue and iterating over edges of the selected vertex, remain the same.
 Therefore, this algorithm runs in the same time complexity class as Dijkstra's, which is $O((m+n) log(n))$.
+#align(right, $qed$)
