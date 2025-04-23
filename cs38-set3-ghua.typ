@@ -94,47 +94,83 @@ Therefore, $I$ is not satisfiable.
 #pseudocode-list(booktabs: true, title: smallcaps[2SAT])[
   - *Input* A directed graph $G_I$ representing the 2SAT problem, wherein none of the SCCs contain $x, overline(x)$.
   - *Output:* A satisfying assignment
-  + SCCs = `SCC`$(G_I)$ \/\/_Linear time_
-  + sol = empty map from variable to true/false
-  + while $G_I$ is not empty
-    + let $C$ be a sink SCC
-    + sol = `Solve2SATComponent`$(C, "sol")$
-    + remove $C$ from $G_I$
+  + $forall v in V: "visited"(v) = F$
+  + let $"sol"$ be an empty map from variable to boolean
+  + let $"visited"$ be an empty map from variable to boolean
+  + for all $v in V$
+    + if not $"visited"[v]$
+      + newsol, newvisited = `2SATExplore`$(G_I, v, "sol", "visited")$
+      + if newsol is empty
+        + newsol, newvisited = `2SATExplore`$(G_I, overline(v), "sol",  "visited")$
+      + sol = newsol
+      + visited = newvisited
   + return sol
-]
-
-#pseudocode-list(booktabs: true, title: smallcaps[Solve2SATComponent])[
-  - *Input:* A SCC $C$ of $G_I$, a partial, fixed solution $"sol"$.
-  - *Output:* A satisfying assignment of all the variables in the SCC.
-  + $forall v: "visited"(v) <- "false"$
-  + let $v$ be a random vertex in $C$
-  + newsol = `2SATExplore`$(C, v, "sol")$
-  + if newsol is empty
-    + newsol = `2SATExplore`$(C, overline(v), "sol")$
-  + return newsol
 ]
 
 #pseudocode-list(booktabs: true, title: smallcaps[2SATExplore])[
-  - *Input:*
-  - *Output:*
-  + $"visited"(v) = "true"$
-  + $"sol"[v] = "true"$
-  + $"sol"[overline(v)] = "false"$
-  + for $(v, u) in E$
+  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set a true, a partial fixed solution $"sol"$, and a map of the visited nodes $"visited"$.
+  - *Output:* The new assignments that are implied by setting $v$ to true, and the updated map of visited nodes.
+  + $"visited"[v] = "visited"[overline(v)] = T$
+  + $"sol"[v] = T$
+  + $"sol"[overline(v)] = F$
+  + for all $(v, u) in E$
     + if $"visited"(u)$
-      + if $"sol"[u] = "false"$
-        + return empty map
+      + if $"sol"[u] = F$
+        + return ($bot$, $bot$)
     + else
-      + sol = `2SATExplore`$(C, u, "sol")$
+      + sol = `2SATExplore`$(G_I, u, "sol", "visited")$
       + if sol is empty
-        + return sol
-  + return sol
+        + return ($bot$, $bot$)
+  + return (sol, visited)
 ]
 
-*Correctness*
-
+*Correctness* \
+_Proof:_
 `2SATExplore` constructs a DFS tree and checks for consistency.
-Since it is always initialized on an SCC, we can be sure that if there are no premature returns resulting from inconsistencies, all nodes and edges are touched.
-Since all edges are checked and no modifications are made to the checked nodes after they are first checked, any returned solution is guaranteed to be consistent.
+It assumes that the root vertex is true and cascades the implications.
+Since all edges are checked and no modifications are made to the checked nodes after they are first checked, any returned solution is guaranteed to be consistent given that the assumption is consistent.
 
-We will use induction to prove that 
+We claim that at the end of every loop, all vertices in $C$ received an assignment that is part of a satisfying assignment.
+We prove this with induction.
+The base case is trivial.
+If neither of the unconstrained searches return unsuccessfully, the problem is unsatisfiable.
+For the inductive step, assume that $"sol"$ is part of a satisfying assignment.
+Assume, to the contrary, that the problem is now unsatisfiable.
+Let the variable that is in question be $x$.
+A contradiction in general must be in the form $(a => overline(a)) and a$, where $a$ can be either a literal or its negation.
+If the constrained 2SAT is unsatisfiable at this point, that must imply both $x$ and $overline(x)$ lead to contradictions.
+This can be written as
+$
+  x => (a => overline(a)) and a \
+  overline(x) => (b => overline(b)) and b \
+$
+which means
+$
+  (x=>a) and (x => (a => overline(a))) \
+  (overline(x) => b) and (overline(x) => (b => overline(b)))
+$
+Since a variable assignment cannot change the graph edges, $(a => overline(a))$ is independent of the value of $x$.
+For the problem to be unsatisfiable, it must be that both $(a => overline(a))$ and $(b => overline(b))$.
+Therefore, we have
+$
+  x &=> a => overline(a) \
+  overline(x) &=> b => overline(b) \
+$
+
+Taking the contrapositive,
+$
+  a => overline(x), b => x \
+  x => a => overline(x) => b => x
+$
+Since each $=>$ implies that there is a path between the two literals, it must be the case that both $x$ and $overline(x)$ are in a cycle, thus in the same SCC, which contradicts the condition given in the problem.
+Therefore, the inductive step also yields a partial solution that leads to no contradictions.
+#align(right, $qed$)
+
+*Runtime*\
+_Proof:_
+`2SATExplore` is called on each node at most once (since we mark it and its negation as visited), which is linear in $|V|$.
+All edges of the input node are checked in `2SATExplore`, and since each node is only processed once, this is also linear in $|E|$.
+Therefore, the algorithm runs in $O(|V|+|E|)$ time.
+
+
+=
