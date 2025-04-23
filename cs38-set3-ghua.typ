@@ -174,3 +174,40 @@ Therefore, the algorithm runs in $O(|V|+|E|)$ time.
 
 
 =
+*Algorithm*
+#pseudocode-list(booktabs: true, title: smallcaps[FindBottleneck])[
+  - *Input:* An undirected graph $G = (V, E)$ with edge lengths $w(e)$, a vertex $x in V$
+  - *Output:* The bottleneck distances from $x$ to all other nodes.
+  + $g(x) = 0, g(x) = bot$
+  + $g(y) = oo, p(y) = bot space (forall y != x)$
+  + $R = {}$ is a set
+  + $Q = {x}$ is a priority queue with key $g(v)$, where $v$ are the elements
+  + while $R != V$
+    + $v = "deleteMin"(Q)$
+    + $"add"(R, v)$
+    + for all $e = (v, z) in E$
+      + if $max{g(v), w(e)} < g(z)$
+        + $p(z) = v$
+        + if $z in.not Q$
+          + $g(z) = max{g(v), w(e)}$
+          + $"insert"(Q, z)$
+        + else
+          + $"decreaseKey"(Q, z, max{g(v), w(e)})$
+]
+
+*Correctness*\
+_Proof:_
+We claim that each time a node is deleted from $Q$, its $g$ value is correctly set.
+We will prove this with induction.
+The base case is trivial: $g(x)$ has an empty path to itself and thus has a $g$ of $0$.
+For the inductive step, assume that all nodes in $R$ have their bottleneck distances set correctly.
+Since all nodes that are accessible from the nodes in $R$ are either in $R$ or in $Q$ (since all nodes are placed immediately on $Q$ upon discovery), all alternative paths from $x$ to $v$ (the ones that are not defined by tracing back parents starting from $v$) must pass through $R$ and optionally the nodes in $Q$.
+- If a path $p$ only consists of $v$ and nodes vertices in $R$, then $h(p)$ is correctly considered since processing all edges happens immediately after being placed into $R$, and
+$ h(p) = max{w_1, dots, w_n} = max{max{w_1, dots, w_(n-1)}, w_n} = max{g(u), w(u, v)} $
+where $u$ is a node deleted from $Q$.
+
+*Runtime* \
+_Proof:_
+The structure of this code is exactly the same as Dijkstra's, and the only difference is how the keys are constructed.
+Other aspects, such as processing the priority queue and iterating over edges of the selected vertex, remain the same.
+Therefore, this algorithm runs in the same time complexity class as Dijkstra's, which is $O((m+n) log(n))$.
