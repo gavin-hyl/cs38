@@ -94,36 +94,32 @@ Therefore, $I$ is not satisfiable.
 #pseudocode-list(booktabs: true, title: smallcaps[2SAT])[
   - *Input* A directed graph $G_I$ representing the 2SAT problem, wherein none of the SCCs contain $x, overline(x)$.
   - *Output:* A satisfying assignment
-  + $forall v in V: "visited"(v) = F$
-  + let $"sol"$ be an empty map from variable to boolean
-  + let $"visited"$ be an empty map from variable to boolean
+  + $forall v in V: "visited"(v) = F, "sol"(v) = ?$
   + for all $v in V$
     + if not $"visited"[v]$
-      + newsol, newvisited = `2SATExplore`$(G_I, v, "sol", "visited")$
-      + if newsol is empty
-        + newsol, newvisited = `2SATExplore`$(G_I, overline(v), "sol",  "visited")$
-      + sol = newsol
-      + visited = newvisited
+      + success = `2SATExplore`$(G_I, v)$
+      + if not success
+        + `2SATBacktrack`$(G_I, v)$
+        + `2SATExplore`$(G_I, overline(v))$ \/\/ _this must succeed, as shown below_
   + return sol
 ]
 
 #pseudocode-list(booktabs: true, title: smallcaps[2SATExplore])[
-  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set a true, a partial fixed solution $"sol"$, and a map of the visited vertices $"visited"$.
-  - *Output:* The new assignments that are implied by setting $v$ to true, and the updated map of visited vertices.
-  + $"visited"[v] = "visited"[overline(v)] = T$
-  + $"sol"[v] = T$
-  + $"sol"[overline(v)] = F$
+  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set true
+  - *Output:* update the $"visited"$ and $"sol"$ attributes of the vertices, return whether or not the search was successful.
+  + $"visited"(v) = "visited"(overline(v)) = T$
+  + $"sol"(v) = T$
+  + $"sol"(overline(v)) = F$
   + for all $(v, u) in E$
     + if $"visited"(u)$
-      + if $"sol"[u] = F$
-        + return ($bot$, $bot$)
+      + if $"sol"(u) = F$
+        + return F
     + else
-      + sol = `2SATExplore`$(G_I, u, "sol", "visited")$
-      + if sol is empty
-        + return ($bot$, $bot$)
-  + return (sol, visited)
+      + success = `2SATExplore`$(G_I, u)$
+      + if success is F
+        + return F
+  + return T
 ]
-
 *Correctness* \
 _Proof:_
 `2SATExplore` constructs a DFS tree and checks for consistency.
@@ -221,4 +217,25 @@ _Proof:_
 The structure of this code is exactly the same as Dijkstra's, and the only difference is how the keys are constructed.
 Other aspects, such as processing the priority queue and iterating over edges of the selected vertex, remain the same.
 Therefore, this algorithm runs in the same time complexity class as Dijkstra's, which is $O((m+n) log(n))$.
+#align(right, $qed$)
+
+=
+_Proof:_
+We will construct a one-to-one mapping between the edges in $T_1$ and $T_2$, where each edge in $T_1$ has the same weight as its corresponding edge in $T_2$.
+This automatically implies that the two trees have the same sorted edge weights.
+For each edge $e_1$ in $T_1$, we will find a corresponding edge $e_2$ in $T_2$ such that $w(e_1) = w(e_2)$.
+Remove $e_1 = (u, v)$ from $T_1$.
+Since a tree is connected and acyclic, removing $e_1$ must break the tree into two components, $C_1$ and $C_2$.
+Since $T_2$ is a tree, there must be a unique path $p$ connecting $u$ and $v$ in $T_2$.
+Since $u$ is in $C_1$ and $v$ is in $C_2$, the path $p$ must cross at least one edge $e_2 = (x, y)$ such that $x in C_1$ and $y in C_2$.
+We claim that $w(e_1) = w(e_2)$.
+Assume, to the contrary, that $w(e_1) < w(e_2)$.
+Then, we can construct a new tree $T_1'$ by adding $e_2$ to $T_1$ and removing $e_1$.
+$T_1'$ is still connected and acyclic, but it has a smaller weight than $T_1$ since $w(e_1) < w(e_2)$.
+This contradicts the assumption that $T_1$ is a minimum spanning tree.
+Assume, to the contrary, that $w(e_1) > w(e_2)$.
+The same argument applies, and we can construct a new tree $T_2'$ by adding $e_1$ to $T_2$ and removing $e_2$.
+Therefore, $w(e_1) = w(e_2)$.
+This means that we can construct a one-to-one mapping between the edges in $T_1$ and $T_2$, where each edge in $T_1$ has the same weight as its corresponding edge in $T_2$.
+We have thus shown that the two trees have the same sorted edge weights.
 #align(right, $qed$)
