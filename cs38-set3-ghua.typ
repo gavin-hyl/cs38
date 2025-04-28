@@ -225,21 +225,33 @@ Therefore, this algorithm runs in the same time complexity class as Dijkstra's, 
 
 =
 _Proof:_
-We will construct a one-to-one mapping between the edges in $T_1$ and $T_2$, where each edge in $T_1$ has the same weight as its corresponding edge in $T_2$.
-This automatically implies that the two trees have the same sorted edge weights.
-For each edge $e_1$ in $T_1$, we will find a corresponding edge $e_2$ in $T_2$ such that $w(e_1) = w(e_2)$.
-Remove $e_1 = (u, v)$ from $T_1$.
-Since a tree is connected and acyclic, removing $e_1$ must break the tree into two components, $C_1$ and $C_2$.
-Since $T_2$ is a tree, there must be a unique path $p$ connecting $u$ and $v$ in $T_2$.
-Since $u$ is in $C_1$ and $v$ is in $C_2$, the path $p$ must cross at least one edge $e_2 = (x, y)$ such that $x in C_1$ and $y in C_2$.
-We claim that $w(e_1) = w(e_2)$.
-Assume, to the contrary, that $w(e_1) < w(e_2)$.
-Then, we can construct a new tree $T_1'$ by adding $e_2$ to $T_1$ and removing $e_1$.
-$T_1'$ is still connected and acyclic, but it has a smaller weight than $T_1$ since $w(e_1) < w(e_2)$.
-This contradicts the assumption that $T_1$ is a minimum spanning tree.
-Assume, to the contrary, that $w(e_1) > w(e_2)$.
-The same argument applies, and we can construct a new tree $T_2'$ by adding $e_1$ to $T_2$ and removing $e_2$.
-Therefore, $w(e_1) = w(e_2)$.
-This means that we can construct a one-to-one mapping between the edges in $T_1$ and $T_2$, where each edge in $T_1$ has the same weight as its corresponding edge in $T_2$.
-We have thus shown that the two trees have the same sorted edge weights.
+Let $L(T_1) = [w(a_1), ..., w(a_(n-1))]$, and $L(T_2) = [w(b_1), ..., w(b_(n-1))]$ be the sorted lists of edges in the two trees.
+Assume, to the contrary, that these two lists are not equal.
+That is, $exists i: w(a_i) != w(b_i)$; WLOG let $w_i = w(a_i) < w(b_i)$.
+Let $k = min{i: w(a_i) < w(b_i)}$, essentially the first index where the two lists differ.
+We now argue that there must be an edge $e in T_1$ such that $w(e) = w_k$ and $e in.not T_2$.
+- If $a_k in.not T_2$, let $e = a_k$.
+- Otherwise, $a_k in T_2$, it must be that $w_k$ appeared in $L(T_2)$ at some index $j < k$. Since the lists are the same up to index $k$, it must be that $L(T_1)$ had at least one more edge with weight $w_k$ than $L(T_2)$. Call that edge $e$.
+
+Now, consider the edges $E_1 = T_1[1:k]$, and the edges $E_2 = T_2[1:k-1]$. Let the subgraphs they span be $G_1 = (V_1, E_1), G_2 = (V_2, E_2)$ respectively.
+
+We apply the cut property.
+Define the cut as $(V_2, V \\ V_2)$.
+Since $b_k$ with $w(b_k) > w(a_j)$ crosses this cut and is part of $T_2$, it must be the case that all $a_j$ do not cross the cut (otherwise, they would be in the MST, not $b_k$).
+
+We now prove that $e$ must cross the cut as well.
+Let $u, v$ be the ends of $b_k$, with $u in V_2$ and $v in V \\ V_2$. Since $T_1$ is a spanning tree, there is a unique $u$ to $v$ path in $T_1$, which we denote as $P_1$.
+Going along that path starting at $u$, it must traverse an edge whose both ends are not in $V_2$, which crosses the cut.
+We know that every edge $<= w_k$ that belongs to $T_1$ lies in the first $k$ positions, so the first cut-corssing edge has weight $<= w_k$.
+However, among the edges of $T_1$ with weight $w_k$ only one is not present in $T_2$, which is $e$.
+
+Therefore, $e$ must cross the cut as well.
+However, as argued from the cut property, $e$ (which belongs to one of $a_j$) does not cross the cut.
+
+We have reached a contradiction, so our assumption that the two lists are not equal must be false.
+
 #align(right, $qed$)
+
+
+
+= collab : Gio Huh
