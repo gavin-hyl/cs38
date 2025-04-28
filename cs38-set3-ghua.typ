@@ -94,78 +94,82 @@ Therefore, $I$ is not satisfiable.
 #pseudocode-list(booktabs: true, title: smallcaps[2SAT])[
   - *Input* A directed graph $G_I$ representing the 2SAT problem, wherein none of the SCCs contain $x, overline(x)$.
   - *Output:* A satisfying assignment
-  + $forall v in V: "visited"(v) = F, "sol"(v) = ?$
+  + $forall v in V: "visit"(v) = oo, "sol"(v) = ?$
+  + timestamp = 0
   + for all $v in V$
-    + if not $"visited"[v]$
-      + success = `2SATExplore`$(G_I, v)$
+    + if not $"visit"(v) <= "timestamp"$
+      + timestamp = timestamp + 2
+      + success = `2SATExplore`$(G_I, v, "timestamp")$
       + if not success
-        + `2SATBacktrack`$(G_I, v)$
-        + `2SATExplore`$(G_I, overline(v))$ \/\/ _this must succeed, as shown below_
+        + timestamp = timestamp - 1
+        + `2SATExplore`$(G_I, overline(v), "timestamp")$ \/\/ _this must succeed, as shown below_
   + return sol
 ]
 
 #pseudocode-list(booktabs: true, title: smallcaps[2SATExplore])[
-  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set true
+  - *Input:* A directed graph $G_I$ representing the 2SAT problem, a given vertex $v$ to set true, and a timestamp variable to track the current previous visits.
   - *Output:* update the $"visited"$ and $"sol"$ attributes of the vertices, return whether or not the search was successful.
-  + $"visited"(v) = "visited"(overline(v)) = T$
+  + $"visit"(v) = "visit"(overline(v)) = "timestamp"$
   + $"sol"(v) = T$
   + $"sol"(overline(v)) = F$
   + for all $(v, u) in E$
-    + if $"visited"(u)$
+    + if $"visit"(u) <= "timestamp"$
       + if $"sol"(u) = F$
         + return F
     + else
-      + success = `2SATExplore`$(G_I, u)$
+      + success = `2SATExplore`$(G_I, u, "timestamp")$
       + if success is F
         + return F
   + return T
 ]
+
 *Correctness* \
 _Proof:_
 `2SATExplore` constructs a DFS tree and checks for consistency.
 It assumes that the root vertex is true and cascades the implications.
-Since all edges are checked and no modifications are made to the checked vertices after they are first checked, any returned solution is guaranteed to be consistent given that the assumption is consistent.
+Since all edges are checked and no modifications are made to the checked vertices after they are first checked, any returned solution is guaranteed to be consistent.
+There is one caveat to consider: the timestamp variable.
+In every loop where `2SATExplore` is called, the first time, the $"visit"$ attribute is set to the current timestamp value, which causes the $"visit"(u) <= "timestamp"$ check to function as a "visited" check.
+If the first search succeeds, the next cycle will have a greater timestamp value, and will respect the previous assignments.
+However, if the search fails the first time, the second call to `2SATExplore` will have a lower timestamp value (but still greater than previous visits).
+This means that it will ignore all the assignments made by the first call to `2SATExplore`.
+This removes the need to backtrack and allows the algorithm to continue searching for a solution as if the first call has never been made, thereby overwriting the previous assignments.
 
-We claim that at the end of every loop, all vertices in $C$ received an assignment that is part of a satisfying assignment.
+We claim that at the end of every loop in `2SAT`, all vertices received an assignment that is part of a satisfying assignment.
 We prove this with induction.
 The base case is trivial.
 If neither of the unconstrained searches return unsuccessfully, the problem is unsatisfiable.
-For the inductive step, assume that $"sol"$ is part of a satisfying assignment.
+For the inductive step, assume that all vertices that have been assigned a value in the previous iterations of the loop are part of a satisfying assignment.
 Assume, to the contrary, that the problem is now unsatisfiable.
 Let the variable that is in question be $x$.
-A contradiction in general must be in the form $(a => overline(a)) and a$, where $a$ can be either a literal or its negation.
+A contradiction in general must be in the form $a and overline(a)$, where $a$ can be either a literal or its negation.
 If the constrained 2SAT is unsatisfiable at this point, that must imply both $x$ and $overline(x)$ lead to contradictions.
 This can be written as
 $
-  x => (a => overline(a)) and a \
-  overline(x) => (b => overline(b)) and b \
+  x => a and overline(a) \
+  overline(x) => b and overline(b) \
 $
 which means
 $
-  (x=>a) and (x => (a => overline(a))) \
-  (overline(x) => b) and (overline(x) => (b => overline(b)))
+  (x=>a) and (x => overline(a)) and (overline(x) => b) and (overline(x) => overline(b)) \
 $
-Since a variable assignment cannot change the graph edges, $(a => overline(a))$ is independent of the value of $x$.
-For the problem to be unsatisfiable, it must be that both $(a => overline(a))$ and $(b => overline(b))$.
+For the problem to be unsatisfiable, it must be that all clauses are satisfied.
 Therefore, we have
 $
-  x &=> a => overline(a) \
-  overline(x) &=> b => overline(b) \
+  (x=>a) and (a => overline(x)) and (overline(x) => b) and (b => x) \
+  x => a => overline(x) => b => x \
 $
 
-Taking the contrapositive,
-$
-  a => overline(x), b => x \
-  x => a => overline(x) => b => x
-$
 Since each $=>$ implies that there is a path between the two literals, it must be the case that both $x$ and $overline(x)$ are in a cycle, thus in the same SCC, which contradicts the condition given in the problem.
 Therefore, the inductive step also yields a partial solution that leads to no contradictions.
+
+Therefore, when the loop terminates, all vertices have been assigned a value that is part of a satisfying assignment.
 #align(right, $qed$)
 
 *Runtime*\
 _Proof:_
-`2SATExplore` is called on each node at most once (since we mark it and its negation as visited), which is linear in $|V|$.
-All edges of the input node are checked in `2SATExplore`, and since each node is only processed once, this is also linear in $|E|$.
+`2SATExplore` is called on each node at most twice (once for the node itself, possibly once if the first call fails).
+All edges of the input node are checked in `2SATExplore`, and since each node is only processed at most twice, this is also linear in $|E|$.
 Therefore, the algorithm runs in $O(|V|+|E|)$ time.
 
 
