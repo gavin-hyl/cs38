@@ -42,14 +42,33 @@ We adapt the FFT algorithm to compute the coefficients of $C(x)$ efficiently.
   + $B_v = "FFT"(B, omega)$
   + for $i in [0, 2N]$:
     + $C_v [i] = A_v [i] dot B_v [i]$.
-  + $C = "FFT"(C_v, omega^(-1))$.
+  + $C = 1/(2N+1) "FFT"(C_v, omega^(-1))$.
   + return $C[0, ..., 2N]$.
 ]
 
 == Correctness
+We assume the correctness of the FFT algorithm for polynomial multiplication, which was discussed in class.
+
+We demonstrate the equivalence between the problem given in the question and the problem of polynomial multiplication.
+Consider the polynomial representation of an array of integers $a[0, ..., n-1]$ as $A(x) = x^(a[0]) + x^(a[1]) + dots.c + x^(a[n-1]) = a_0 + a_1 x +dots.c + a_N x^N$.
+Since the values in the array are bounded by $[0, N]$, the polynomial $A(x)$ has degree at most $N$.
+Each coefficient $a_i$ in the polynomial corresponds to the number of times the integer $i$ appears in the array $a[0, ..., n-1]$, since they represent the same power. This is captured by the first loop in the algorithm.
+The same construction holds for the array $b[0, ..., n-1]$ as $B(x) = x^(b[0]) + x^(b[1]) + dots.c + x^(b[n-1]) = b_0 + b_1 x +dots.c + b_N x^N$.
+As discussed in lecture, the polynomial $C(x) = A(x) B(x)$ is at most degree $2N$ and has coefficients $c_i$ such that
+$ 
+  c_i = sum_(j=0)^i a_j b_(i-j) = sum_(j=0)^i (sum_(k=0)^n bold(1)[a[k] = j]) (sum_(k=0)^n bold(1)[b[k] = i-j]) = sum_(j=0)^i A[j] B[i-j]
+$
+For any $0 <= i <= 2N$, this equation captures the original problem since it first counts the number of pairs $(j, i-j)$ that will sum to $i$, thereby covering all possible combinations of integers that may sum to $i$.
+For each pair of integers, the algorithm counts how many times each integer appears in the arrays $a$ and $b$ using the coefficient representation.
+Multiplying gives all possible combinations of elements from the two arrays that sum to $i$.
+Since this is repeated for all $0 <= i <= 2N$, for polynomial multiplication (correct thanks to FFT), the $d$ array is output correctly.
 
 == Runtime
-
+Constructing the arrays $A$ and $B$ takes $O(n)$ time, since we are iterating through the input arrays (of length $n$) once.
+The FFT algorithm runs in $O((2N+1) log (2N+1)) = O(N log(N))$ time, since both $A, B$ are of size $2N + 1$.
+The multiplication of the two arrays $A_v$ and $B_v$ takes $O(2N) = O(N)$ time, since we are multiplying two arrays of size $2N + 1$ elementwise.
+Finally, the inverse FFT also runs in $O(N log(N))$ time.
+Therefore, the total runtime of the algorithm is $O(n + N log(N))$.
 
 #pagebreak()
 =
@@ -220,24 +239,35 @@ Therefore, the total runtime of the algorithm is $O(n(m+n))$, which is polynomia
 =
 
 ==
-Lemma: if $"lowpre"[v] = "pre"[u]$, then there exists a path from $v$ to $u$ in the graph. \
+*Lemma: every $"lowpre"$ value corresponds to the $"pre"$ value of some vertex in the graph.* 
+We first note that there are only two ways that $"lowpre"$ is modified:
+during the previsit routine (which sets $"lowpre"[v] = "pre"[v]$), or during the postvisit routine (which sets $"lowpre"[v] = min("lowpre"[v], "lowpre"[u])$ for all neighbors $u$).
+Therefore, every $"lowpre"$ value must correspond to the $"pre"$ value of _some_ vertex in the graph.
+
+*Lemma: if $"lowpre"[u] = "pre"[v]$, then there exists a path from $u$ to $v$ in the graph.* \
 _Proof:_
-We will prove this by construction of a path from $v$ to $u$.
-If $u = v$, then the path is trivial.
-Otherwise, there must be some vertex $w$ such that there exists an edge $(v, w)$ in the graph, where $"lowpre"[w] = "lowpre"[v] = "pre"[u]$.
+We will prove this by constructing a path $P$.
+The algorithm is as such:
+Add the vertex $u$ to $P$.
+While the latest vertex $h$ (for "head") in $P$ is not $v$, do the following:
+- Find a neighbor $w$ of $h$ such that during `postvisit` call on $h$, $"lowpre"[w] = "pre"[v]$ is the minimum among all neighbors of $h$ and the value of $"lowpre"[w]$ determined the value of $"lowpre"[h]$.
+- Add $w$ to $P$, let $h = w$, and repeat.
+
+We first show that finding the neighbor $w$ is always possible.
+Assume, to the contrary, that there exists a vertex $h$ that satisfies $"lowpre"[h] = "pre"[v]$ but has no neighbors $w$ such that $"lowpre"[w] = "pre"[v]$, and $h != v$.
 
 
-Lemma: $"lowpre"[u] = "pre"[v]$ for all $u in D$. \
+
+*Lemma: $"lowpre"[u] = "pre"[v]$ for all $u in D$.* \
 _Proof:_
 // Since $D$ is a sink SCC, all edges of the form $(v, u)$ must have $u in D$.
 // Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
-There are only two ways that $"lowpre"$ is modified:
-during the previsit routine (which sets $"lowpre"[v] = "pre"[v]$), or during the postvisit routine (which sets $"lowpre"[v] = min("lowpre"[v], "lowpre"[u])$ for all neighbors $u$).
-Therefore, every $"lowpre"$ value must correspond to the $"pre"$ value of _some_ vertex in the graph.
+
 // Assume, to the contrary, that there exists a vertex $u$ in $D$ such that $"lowpre"[u] != "pre"[v]$.
 - We first demonstrate $"lowpre"[u] >= "pre"[v]$. \
   Assume, to the contrary, that $"lowpre"[u] < "pre"[v]$.
-  According to the lemma above, there must exist a path from $u$ to another vertex $w$ in the graph such that $"pre"[w] = "lowpre"[u]$.
+  According to the first lemma, there must another vertex $w$ in the graph such that $"pre"[w] = "lowpre"[u]$.
+  Moreover, according to the second lemma, there must be a path from $u$ to $w$ in the graph.
   However, this implies that $"pre"[w] < "pre"[v]$.
   Since $v$ is the first vertex encountered in $D$, this means that $w in.not D$.
   However, since $D$ is a sink SCC, there cannot be any edges from $D$ to any vertices outside of $D$, which is a contradiction.
@@ -259,21 +289,20 @@ Therefore, it must be that $"lowpre"[u] = "pre"[v]$.
 In order to show $T_v = D$, we will show subset inclusion.
 
 === $D subset.eq T_v$:
-Let $u$ be an arbitrary vertex in $D$.
-We will first prove that $"lowpre"[u] = "lowpre"[v]$.
-A conclusion that follows from $D$ being a sink SCC is that $"lowpre"[u] >= "lowpre"[v]$.
-Assume, to the contrary, that there exists a vertex $w$ in $D$ such that $"lowpre"[w] < "lowpre"[v]$.
-Since $v$ is the first vertex encountered in $D$ in the DFS traversal, $"pre"[w] > "pre"[v]$.
-This must mean that one of $w$'s neighbors $w_1$ has $"lowpre"[w_1] < "lowpre"[v]$.
-Then, since $D$ is an SCC, there exists a path from $w$ to $v$ in $D$.
-
-Since $D$ is an SCC, there exists a path from $u$ to $v$ in $D$.
-Name that path $P$, $P = [u=p_1, p_2, ..., v = p_n]$
-- We will show that $"lowpre"[p_i] = "lowpre"[v], forall i in [1, n]$ with induction.
-- Base case: $i = 1$.
-  - Since 
-
+As shown above, for all $u in D$, it must be that $"lowpre"[u] = "pre"[v]$.
+Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
+Therefore, only one vertex satisfies the condition $"lowpre"[u] = "pre"[v]$ in $D$, which is $v$ itself.
+Therefore, no vertices are removed from the stack when `explore` is called on any other vertex in $D$. // clarification about vertices outside of D?
+Since $v$ is the first vertex encountered in $D$, it must be that all vertices in $D$ are pushed onto the stack after $v$.
+Since the `explore` subroutine touches all vertices in $D$ during the DFS traversal and pushes them onto the stack above $v$, it must be that all these vertices are popped off the stack when $T_v$ is constructed.
+Therefore, any $u in D$ must also be in $T_v$, so we have $D subset.eq T_v$.
 
 === $T_v subset.eq D$.
-Let $u$ be an arbitrary vertex in $T_v$.
-Since $D$ is an SCC, 
+Assume, to the contrary, that there exists a vertex $u in T_v$ such that $u in.not D$.
+This implies that $u$ was pushed onto $S$ before `postvisit` was called on $v$.
+Since `explore` travels along the edges of the graph, there must exist a path from $v$ to $u$ in the graph.
+However, since $D$ is a sink SCC, there cannot be any edges from $D$ to any vertices outside of $D$, which is a contradiction.
+Therefore, $T_v subset.eq D$ must hold.
+
+
+==
