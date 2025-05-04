@@ -220,14 +220,41 @@ Therefore, the total runtime of the algorithm is $O(n(m+n))$, which is polynomia
 =
 
 ==
-Lemma: $"lowpre"[v] = "pre"[v]$. \
+Lemma: if $"lowpre"[v] = "pre"[u]$, then there exists a path from $v$ to $u$ in the graph. \
 _Proof:_
-Since $D$ is a sink SCC, all edges of the form $(v, u)$ must have $u in D$.
-Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
+We will prove this by construction of a path from $v$ to $u$.
+If $u = v$, then the path is trivial.
+Otherwise, there must be some vertex $w$ such that there exists an edge $(v, w)$ in the graph, where $"lowpre"[w] = "lowpre"[v] = "pre"[u]$.
+
+
+Lemma: $"lowpre"[u] = "pre"[v]$ for all $u in D$. \
+_Proof:_
+// Since $D$ is a sink SCC, all edges of the form $(v, u)$ must have $u in D$.
+// Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
 There are only two ways that $"lowpre"$ is modified:
-when a vertex is first visited (which sets $"lowpre"[v] = "pre"[v]$), or when a neighbor vertex is visited (which sets $"lowpre"[v] = min("lowpre"[v], "lowpre"[u])$).
+during the previsit routine (which sets $"lowpre"[v] = "pre"[v]$), or during the postvisit routine (which sets $"lowpre"[v] = min("lowpre"[v], "lowpre"[u])$ for all neighbors $u$).
 Therefore, every $"lowpre"$ value must correspond to the $"pre"$ value of _some_ vertex in the graph.
-Assume, to the contrary, that there exists a vertex $u$ in $D$ such that $"lowpre"[u] < "pre"[v]$.
+// Assume, to the contrary, that there exists a vertex $u$ in $D$ such that $"lowpre"[u] != "pre"[v]$.
+- We first demonstrate $"lowpre"[u] >= "pre"[v]$. \
+  Assume, to the contrary, that $"lowpre"[u] < "pre"[v]$.
+  According to the lemma above, there must exist a path from $u$ to another vertex $w$ in the graph such that $"pre"[w] = "lowpre"[u]$.
+  However, this implies that $"pre"[w] < "pre"[v]$.
+  Since $v$ is the first vertex encountered in $D$, this means that $w in.not D$.
+  However, since $D$ is a sink SCC, there cannot be any edges from $D$ to any vertices outside of $D$, which is a contradiction.
+- We now show that $"lowpre"[u] = "pre"[v]$. \
+  Consider a path $[u=p_1, ..., v=p_n]$ from $u$ to $v$, which must exist since $D$ is a SCC.
+  We claim that $"lowpre"[p_i] = "lowpre"[v]$ for all $i$ in $[1, n]$.
+  - Base case: $i = n$. As stated in the first case, it must be that $"lowpre"[v] >= "pre"[v]$. However, since $"lowpre"[v]$ is initialized to $"pre"[v]$ during the previsit routine, and its value can only decrease since $min{a, b} <= a$, it must be that $"lowpre"[v] <= "pre"[v] => "lowpre"[v] = "pre"[v]$.
+  - Inductive step: assume that $"lowpre"[p_i] = "lowpre"[v]$ for some $i$ in $[2, n]$.
+    We will show that $"lowpre"[p_(i-1)] = "lowpre"[v]$.
+    By properties of the DFS traversal, we know that when `postvisit` is called on $p_(i-1)$, it must already be called on all of its neighbors, including $p_i$.
+    Consider an arbitrary neighbor $w$ of $p_(i-1)$.
+    By the first case, we know that $"lowpre"[w] >= "pre"[v]$.
+    Moreover, since $p_i$ is a neighbor of $p_(i-1)$, we know that the lower bound is achieved when $w = p_i$.
+    Again, $"lowpre"[p_(i-1)]$ cannot be smaller than $"pre"[v]$ by the argument in the first case.
+    Therefore, $"lowpre"[p_(i-1)] = "lowpre"[v]$, and the inductive step holds.
+
+Therefore, it must be that $"lowpre"[u] = "pre"[v]$.
 
 In order to show $T_v = D$, we will show subset inclusion.
 
