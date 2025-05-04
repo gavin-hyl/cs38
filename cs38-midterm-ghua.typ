@@ -163,10 +163,15 @@ The master theorem resolves this recurrence to $T(n) = O(n log n)$.
   + $A$ is an empty map from variables in $V$ to boolean values.
   + while $V$ is not empty:
     + iterate over $V$ to find a variable $v$ with only one edge $e$ in $E$
+    + let $c$ be the clause connected to $v$ by $e$
     + if $v$ appears in $c$ positively:
       + $A[v]$ is set to true
     + otherwise:
       + $A[v]$ is set to false
+    + for all edges $(c, v') in E$:
+      + if $v'$ has only one edge in $E$:
+        + $A[v']$ is arbitrarily set to true
+        + remove $v'$ from $V$ and the edge $(c, v')$ from $E$
     + remove $v$ from $V$ and $e$ from $E$
   + return $A$
 ]
@@ -174,12 +179,74 @@ The master theorem resolves this recurrence to $T(n) = O(n log n)$.
 
 == Correctness
 We will demonstrate the correctness of the algorithm by performing an induction on the times the `while` loop runs.
-This will also show that any acyclic incidence graph of a 3SAT instance is satisfiable.
-The base case is when no variables have been removed.
-Assume, to the contrary, that all variables appear in at least two clauses.
-Consider an alternative graph, $G'$, where the nodes are the clauses in the 3SAT and each edge corresponds to a variable.
-The edges are constructed in the following manner:
-For each variable $v$ in the 3SAT, randomly select two clauses $c_1$ and $c_2$ that contain $v$.
-They must exist since we have assumed that all variables appear in at least two clauses.
-Then, add an edge between $c_1$ and $c_2$ in $G'$.
+This will also show that any 3SAT instance with an acyclic incidence graph of is satisfiable.
+- Inductive hypothesis: at any iteration in the loop, there will always be at least one variable in the incidence graph $G$ with only one edge in $E$. After this variable is removed, the resulting problem will still be a 3SAT instance with an acyclic incidence graph.
+- Base case: this is when no variables have been removed.
+  - Assume, to the contrary, that all variables appear in at least two clauses.
+    Consider the number of edges in the incidence graph $G$.
+    Each clause is connected to exactly three variables, so there are $3m$ edges in total.
+    Since each variable is connected to at least two clauses (consuming $2$ edges), there are at most $3/2 m$ variables in total.
+    We thus have $|V| = m + 3/2 m = 5/2 m > m-1$, so $|V|$ is greater than the number of edges required for a tree, which contains the maximum number of edges of an acyclic graph.
+    Therefore, the incidence graph must be cyclic. \
+  - We now consider the structure of the problem after removing the variable $v$ with only one edge in $E$.
+    Since $v$ is only connected to one clause $c$, setting $v$ to either true or false will not affect the satisfiability of the remaining clauses while immediately satisfying clause $c$.
+    Removing the edges that are connected to $c$ will not create any cycles, since $G$ is acyclic by assumption.
+    The other variable are decoupled from the removed clause by removing the edge connecting them.
+    Therefore, the resulting problem is still a 3SAT, with one variable removed and $m-1$ clauses remaining.
+- Inductive step:
+  Assume the hypothesis holds for $k$ iterations of the loop.
+  Then, at the $(k+1)$'th iteration, the problem is still a 3SAT instance with an acyclic incidence graph, with $m-k$ clauses remaining.
+  By the argument in the base case, there must be at least one variable in the incidence graph $G$ with only one edge in $E$.
+  After removing this variable, the resulting problem is still a 3SAT instance with an acyclic incidence graph, with $m-k-1$ clauses remaining.
+  Therefore, the inductive hypothesis holds for $k+1$ iterations of the loop.
 
+Therefore, by induction, the algorithm is correct.
+#align(right, $qed$)
+
+An immediate consequence of this proof is that any 3SAT instance with an acyclic incidence graph is satisfiable, since at every step of the algorithm, we are guaranteed to find a variable with only one edge in the incidence graph, and we can always set it to a value that satisfies the clause it is connected to.
+We may satisfy all clauses in the 3SAT instance by repeating this process.
+#align(right, $qed$)
+
+== Runtime
+In every iteration, we perform a linear search through the variables in $V$ to find a variable with only one edge in $E$. This is $O(n)$ time.
+We also perform a linear search through the edges in $E$ to find other variables that are connected to the clause $c$ that was just satisfied, which is also $O(m)$ time.
+Each iteration of the loop removes one clause from the incidence graph, so the loop will run at most $n$ times (since the number of clauses is strictly smaller than $n$).
+Therefore, the total runtime of the algorithm is $O(n(m+n))$, which is polynomial in the size of the input.
+#align(right, $qed$)
+
+
+
+#pagebreak()
+=
+
+==
+Lemma: $"lowpre"[v] = "pre"[v]$. \
+_Proof:_
+Since $D$ is a sink SCC, all edges of the form $(v, u)$ must have $u in D$.
+Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
+There are only two ways that $"lowpre"$ is modified:
+when a vertex is first visited (which sets $"lowpre"[v] = "pre"[v]$), or when a neighbor vertex is visited (which sets $"lowpre"[v] = min("lowpre"[v], "lowpre"[u])$).
+Therefore, every $"lowpre"$ value must correspond to the $"pre"$ value of _some_ vertex in the graph.
+Assume, to the contrary, that there exists a vertex $u$ in $D$ such that $"lowpre"[u] < "pre"[v]$.
+
+In order to show $T_v = D$, we will show subset inclusion.
+
+=== $D subset.eq T_v$:
+Let $u$ be an arbitrary vertex in $D$.
+We will first prove that $"lowpre"[u] = "lowpre"[v]$.
+A conclusion that follows from $D$ being a sink SCC is that $"lowpre"[u] >= "lowpre"[v]$.
+Assume, to the contrary, that there exists a vertex $w$ in $D$ such that $"lowpre"[w] < "lowpre"[v]$.
+Since $v$ is the first vertex encountered in $D$ in the DFS traversal, $"pre"[w] > "pre"[v]$.
+This must mean that one of $w$'s neighbors $w_1$ has $"lowpre"[w_1] < "lowpre"[v]$.
+Then, since $D$ is an SCC, there exists a path from $w$ to $v$ in $D$.
+
+Since $D$ is an SCC, there exists a path from $u$ to $v$ in $D$.
+Name that path $P$, $P = [u=p_1, p_2, ..., v = p_n]$
+- We will show that $"lowpre"[p_i] = "lowpre"[v], forall i in [1, n]$ with induction.
+- Base case: $i = 1$.
+  - Since 
+
+
+=== $T_v subset.eq D$.
+Let $u$ be an arbitrary vertex in $T_v$.
+Since $D$ is an SCC, 
