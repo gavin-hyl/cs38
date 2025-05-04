@@ -46,6 +46,10 @@ We adapt the FFT algorithm to compute the coefficients of $C(x)$ efficiently.
   + return $C[0, ..., 2N]$.
 ]
 
+== Correctness
+
+== Runtime
+
 
 #pagebreak()
 =
@@ -125,6 +129,8 @@ We have a contradiction.
 
 Therefore, all points returned by `FindSpecialPoints(L)` and `FindSpecialPoints(R)` are special points in $P$, and all special points in $P$ are returned by the algorithm.
 
+#align(right, $qed$)
+
 == Runtime
 Finally, we show that the algorithm runs in $O(n log n)$ time.
 The base case of the recursion is when $n = 1$, which runs in constant time.
@@ -143,3 +149,37 @@ $
   T(n) <= 2 T(n/2) + O(n)
 $
 The master theorem resolves this recurrence to $T(n) = O(n log n)$.
+#align(right, $qed$)
+
+
+#pagebreak()
+
+=
+
+== Algorithm
+#pseudocode-list(booktabs: true, title: smallcaps[SolveAcyclic3SAT])[
+  - *Input:* An acyclic incidence graph $G = (V, E)$ of a 3SAT instance with $n$ variables and $m$ clauses.
+  - *Output:* A boolean assignment $A$ of the variables that satisfies the 3SAT, or "None" if no such assignment exists (it will always exist though).
+  + $A$ is an empty map from variables in $V$ to boolean values.
+  + while $V$ is not empty:
+    + iterate over $V$ to find a variable $v$ with only one edge $e$ in $E$
+    + if $v$ appears in $c$ positively:
+      + $A[v]$ is set to true
+    + otherwise:
+      + $A[v]$ is set to false
+    + remove $v$ from $V$ and $e$ from $E$
+  + return $A$
+]
+
+
+== Correctness
+We will demonstrate the correctness of the algorithm by performing an induction on the times the `while` loop runs.
+This will also show that any acyclic incidence graph of a 3SAT instance is satisfiable.
+The base case is when no variables have been removed.
+Assume, to the contrary, that all variables appear in at least two clauses.
+Consider an alternative graph, $G'$, where the nodes are the clauses in the 3SAT and each edge corresponds to a variable.
+The edges are constructed in the following manner:
+For each variable $v$ in the 3SAT, randomly select two clauses $c_1$ and $c_2$ that contain $v$.
+They must exist since we have assumed that all variables appear in at least two clauses.
+Then, add an edge between $c_1$ and $c_2$ in $G'$.
+
