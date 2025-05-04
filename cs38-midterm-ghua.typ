@@ -250,13 +250,31 @@ We will prove this by constructing a path $P$.
 The algorithm is as such:
 Add the vertex $u$ to $P$.
 While the latest vertex $h$ (for "head") in $P$ is not $v$, do the following:
-- Find a neighbor $w$ of $h$ such that during `postvisit` call on $h$, $"lowpre"[w] = "pre"[v]$ is the minimum among all neighbors of $h$ and the value of $"lowpre"[w]$ determined the value of $"lowpre"[h]$.
+- Find a neighbor $w$ of $h$ that satisfies:
+  - During `postvisit` call on $h$, the value of $"lowpre"[w]$ determined the value of $"lowpre"[h] = "pre"[v]$.
+  - $w$ must not be in $P$.
 - Add $w$ to $P$, let $h = w$, and repeat.
 
 We first show that finding the neighbor $w$ is always possible.
-Assume, to the contrary, that there exists a vertex $h$ that satisfies $"lowpre"[h] = "pre"[v]$ but has no neighbors $w$ such that $"lowpre"[w] = "pre"[v]$, and $h != v$.
+- Base case: $h = u$. Since $"lowpre"[u] = "pre"[v]$, there must exist a vertex $w$ such that $"lowpre"[w] = "pre"[v]$ and $w$ is a neighbor of $u$ (note that $"pre"[u] = "pre"[v]$ is impossible since each vertex has a unique pre value). $w$ is trivially not in $P$ since $P$ only contains $u$.
+- Inductive step: assume that the path now has multiple vertices and the latest vertex $h$ in $P$ satisfies $"lowpre"[h] = "pre"[v]$.
+  Since the algorithm did not terminate, we know that $h != v$.
+  Assume, to the contrary, that no neighbors $w$ satisfy $"lowpre"[w] = "pre"[v]$ and $w in.not P$.
+  Since $h$ is not $v$, we have $"pre"[h] > "pre"[v]$ (lesser is impossible since $"pre"[h] > "lowpre"[h] = "pre"[v]$)
+  Therefore, there must exist a vertex $w$ such that $"lowpre"[w] = "lowpre"[h]$ that set the value of $"lowpre"[h]$ during the `postvisit` call on $h$.
+  Per the assumption, $w$ must be in $P$.
+  Consider the subpath $P' = [w = p_1, ..., h = p_k]$.
+  By construction, however, vertices that come later in the path set the values of $"lowpre"$ for vertices that come earlier in the path.
+  We thus have $"lowpre"[h]$ setting the value of $"lowpre"[w]$, and $"lowpre"[w]$ setting the value of $"lowpre"[h]$.
+  - If $"lowpre"[h]$ setting the value of $"lowpre"[w]$ occurred first (i.e., `postvisit` was called on $w$ before $h$), it must be the case that when `postvisit` was called on $w$, $"lowpre"[h] = "pre"[h] > "pre"[v]$, so $"lowpre"[w] = "pre"[h] > "pre"[v]$, which is a contradiction since we assumed that $"lowpre"[w] = "pre"[v]$.
+  - If $"lowpre"[w]$ setting the value of $"lowpre"[h]$ occurred first (i.e., `postvisit` was called on $h$ before $w$), the same argument holds.
+Therefore, we have a contradiction, and there must exist a neighbor $w$ of $h$ such that $"lowpre"[w] = "pre"[v]$ and $w in.not P$.
+Therefore, $P$ consists of no repeated vertices.
 
+We now show that the algorithm terminates.
+Since at every iteration, we add one vertex to $P$ and the number of vertices in the graph is finite, the algorithm must terminate after at most $|V|$ iterations.
 
+Therefore, the algorithm correctly constructs a path $P$ from $u$ to $v$ in the graph.
 
 *Lemma: $"lowpre"[u] = "pre"[v]$ for all $u in D$.* \
 _Proof:_
@@ -291,7 +309,7 @@ In order to show $T_v = D$, we will show subset inclusion.
 === $D subset.eq T_v$:
 As shown above, for all $u in D$, it must be that $"lowpre"[u] = "pre"[v]$.
 Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
-Therefore, only one vertex satisfies the condition $"lowpre"[u] = "pre"[v]$ in $D$, which is $v$ itself.
+Therefore, only one vertex satisfies the condition $"lowpre"[u] = "pre"[u]$ in $D$, which is $v$ itself.
 Therefore, no vertices are removed from the stack when `explore` is called on any other vertex in $D$. // clarification about vertices outside of D?
 Since $v$ is the first vertex encountered in $D$, it must be that all vertices in $D$ are pushed onto the stack after $v$.
 Since the `explore` subroutine touches all vertices in $D$ during the DFS traversal and pushes them onto the stack above $v$, it must be that all these vertices are popped off the stack when $T_v$ is constructed.
@@ -304,5 +322,26 @@ Since `explore` travels along the edges of the graph, there must exist a path fr
 However, since $D$ is a sink SCC, there cannot be any edges from $D$ to any vertices outside of $D$, which is a contradiction.
 Therefore, $T_v subset.eq D$ must hold.
 
+Therefore, we have $D = T_v$.
 
 ==
+_Proof:_
+Consider the graph with nodes consisting of the SCCs of the original graph, and edges consisting of edges between SCCs in the original graph.
+Let this graph be $G'$, it is a DAG.
+Let there be $m$ SCCs.
+We perform induction on $m$.
+- Base case: $m = 1$.
+  In this case, the original graph is already a single SCC, so the algorithm trivially returns the correct set of vertices in the SCC.
+- Inductive step: assume the algorithm is correct for $m = k$ SCCs.
+  Let the first sink SCC that the algorithm encounters be $D$.
+  By the previous part of the proof, we have shown that the algorithm correctly identifies the set of vertices in $D$, returns them as $T_v$, and removes them from the stack $S$.
+  Since they are removed from the stack and marked as `visited`, they will never influence the algorithm again since the only three ways the algorithm considers new nodes is
+  - in the `explore` subroutine, where it checks for unvisited neighbors of the current node. Since all vertices in $D$ are marked as visited, they will not be considered again.
+  - in the `postvisit` routine, it checks for neighbors of visited nodes if they are on the stack. Since all vertices in $D$ are removed from the stack, they will not be considered again.
+  - in the `modified dfs` subroutine, where it checks for unvisited nodes to explore. Since all vertices in $D$ are marked as visited, they will not be considered again.
+  To the algorithm, the vertices in $D$ are no longer part of the graph.
+  Therefore, the $G'$ graph is now a DAG with $m-1$ SCCs.
+  By the inductive hypothesis, the algorithm will correctly identify the next sink SCC in $G'$ and return the correct set of vertices in that SCC.
+
+Therefore, by induction, the algorithm is correct for all $m$ SCCs.
+#align(right, $qed$)
