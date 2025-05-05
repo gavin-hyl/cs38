@@ -1,7 +1,7 @@
 #import "@preview/lovelace:0.3.0": *
 
 #let title = "CS 38 Midterm Exam Responses"
-#let author = "Gavin Yuliu Hua"
+#let author = "Anonymous"
 #let date = "2025-04"
 
 #set heading(numbering: (..nums) => {
@@ -62,6 +62,8 @@ For any $0 <= i <= 2N$, this equation captures the original problem since it fir
 For each pair of integers, the algorithm counts how many times each integer appears in the arrays $a$ and $b$ using the coefficient representation.
 Multiplying gives all possible combinations of elements from the two arrays that sum to $i$.
 Since this is repeated for all $0 <= i <= 2N$, for polynomial multiplication (correct thanks to FFT), the $d$ array is output correctly.
+#align(right, $qed$)
+
 
 == Runtime
 Constructing the arrays $A$ and $B$ takes $O(n)$ time, since we are iterating through the input arrays (of length $n$) once.
@@ -69,8 +71,9 @@ The FFT algorithm runs in $O((2N+1) log (2N+1)) = O(N log(N))$ time, since both 
 The multiplication of the two arrays $A_v$ and $B_v$ takes $O(2N) = O(N)$ time, since we are multiplying two arrays of size $2N + 1$ elementwise.
 Finally, the inverse FFT also runs in $O(N log(N))$ time.
 Therefore, the total runtime of the algorithm is $O(n + N log(N))$.
+#align(right, $qed$)
 
-#pagebreak()
+
 =
 
 == Algorithm
@@ -103,7 +106,7 @@ We will show that it is also correct for $n = 2^(k+1)$.
 
 We split the set of points into three sets: $L$, $R$, and $M$.
 In the algorithm, we first extract the special points from the set $M$.
-This set contains all points with the same $x$-coordinate as the middle element (not median!) $x_m$; it must be nonempty.
+This set contains all points with the same $x$-coordinate as the middle element $x_m$; it must be nonempty.
 Since all points in $M$ have the same $x$-coordinate, only $(x_M, y_M)$ is potentially a special point (if we chose any other point $(x_i, y_i) in M$, we would have $x_i = x_m$ and $y_i <= y_M$, which contradicts the definition of a special point).
 It has a greater $x$ coordinate than all points in $L$ by construction.
 Therefore, if it has a greater $y$-coordinate than all points in $R$, it is a special point, since no point would be able to dominate it in both coordinates.
@@ -151,7 +154,7 @@ Therefore, all points returned by `FindSpecialPoints(L)` and `FindSpecialPoints(
 #align(right, $qed$)
 
 == Runtime
-Finally, we show that the algorithm runs in $O(n log n)$ time.
+We show that the algorithm runs in $O(n log n)$ time.
 The base case of the recursion is when $n = 1$, which runs in constant time.
 The selection algorithm has an expected time complexity of $O(n)$.
 Constructing the $R$ set takes $O(n)$ time, as does finding the maximum $y$-coordinate in $R$, since both require a single pass through the points.
@@ -171,7 +174,7 @@ The master theorem resolves this recurrence to $T(n) = O(n log n)$.
 #align(right, $qed$)
 
 
-#pagebreak()
+
 
 =
 
@@ -205,12 +208,14 @@ This will also show that any 3SAT instance with an acyclic incidence graph of is
     Consider the number of edges in the incidence graph $G$.
     Each clause is connected to exactly three variables, so there are $3m$ edges in total.
     Since each variable is connected to at least two clauses (consuming $2$ edges), there are at most $3/2 m$ variables in total.
-    We thus have $|V| = m + 3/2 m = 5/2 m > m-1$, so $|V|$ is greater than the number of edges required for a tree, which contains the maximum number of edges of an acyclic graph.
-    Therefore, the incidence graph must be cyclic. \
+    We thus have $|V| <= m + 3/2 m = 5/2 m$, which implies $|V| < 3m < |E|$.
+    Since a connected, undirected, acyclic graph with $|V|$ vertices has $|V| - 1$ edges, we have $|E| <= |V| - 1$ for a graph that is undirected and acyclic (not necessarily connected).
+    However, we have $|E| > |V| - 1$, which implies that $G$ must be cyclic, which contradicts the assumption that $G$ is acyclic.
   - We now consider the structure of the problem after removing the variable $v$ with only one edge in $E$.
-    Since $v$ is only connected to one clause $c$, setting $v$ to either true or false will not affect the satisfiability of the remaining clauses while immediately satisfying clause $c$.
+    Since $v$ is only connected to one clause $c$, setting $v$ to either true or false will not falsify (affect) any remaining clauses while immediately satisfying clause $c$.
     Removing the edges that are connected to $c$ will not create any cycles, since $G$ is acyclic by assumption.
-    The other variable are decoupled from the removed clause by removing the edge connecting them.
+    The other variables are decoupled from the removed clause by removing the edge connecting them.
+    Since the clause $c$ is satisfied, the value that the other variables are set to does not matter.
     Therefore, the resulting problem is still a 3SAT, with one variable removed and $m-1$ clauses remaining.
 - Inductive step:
   Assume the hypothesis holds for $k$ iterations of the loop.
@@ -235,7 +240,7 @@ Therefore, the total runtime of the algorithm is $O(n(m+n))$, which is polynomia
 
 
 
-#pagebreak()
+
 =
 
 ==
@@ -243,6 +248,9 @@ Therefore, the total runtime of the algorithm is $O(n(m+n))$, which is polynomia
 We first note that there are only two ways that $"lowpre"$ is modified:
 during the previsit routine (which sets $"lowpre"[v] = "pre"[v]$), or during the postvisit routine (which sets $"lowpre"[v] = min("lowpre"[v], "lowpre"[u])$ for all neighbors $u$).
 Therefore, every $"lowpre"$ value must correspond to the $"pre"$ value of _some_ vertex in the graph.
+#align(right, $qed$)
+
+
 
 *Lemma: if $"lowpre"[u] = "pre"[v]$, then there exists a path from $u$ to $v$ in the graph.* \
 _Proof:_
@@ -275,6 +283,8 @@ We now show that the algorithm terminates.
 Since at every iteration, we add one vertex to $P$ and the number of vertices in the graph is finite, the algorithm must terminate after at most $|V|$ iterations.
 
 Therefore, the algorithm correctly constructs a path $P$ from $u$ to $v$ in the graph.
+#align(right, $qed$)
+
 
 *Lemma: $"lowpre"[u] = "pre"[v]$ for all $u in D$.* \
 _Proof:_
@@ -287,7 +297,8 @@ _Proof:_
   According to the first lemma, there must another vertex $w$ in the graph such that $"pre"[w] = "lowpre"[u]$.
   Moreover, according to the second lemma, there must be a path from $u$ to $w$ in the graph.
   However, this implies that $"pre"[w] < "pre"[v]$.
-  Since $v$ is the first vertex encountered in $D$, this means that $w in.not D$.
+  Since $v$ is the first vertex encountered in $D$, it must have the lowest $"pre"$ value of all vertices in $D$.
+  This means that $w in.not D$.
   However, since $D$ is a sink SCC, there cannot be any edges from $D$ to any vertices outside of $D$, which is a contradiction.
 - We now show that $"lowpre"[u] = "pre"[v]$. \
   Consider a path $[u=p_1, ..., v=p_n]$ from $u$ to $v$, which must exist since $D$ is a SCC.
@@ -305,15 +316,20 @@ _Proof:_
 Therefore, it must be that $"lowpre"[u] = "pre"[v]$.
 
 In order to show $T_v = D$, we will show subset inclusion.
+#align(right, $qed$)
+
+
 
 === $D subset.eq T_v$:
 As shown above, for all $u in D$, it must be that $"lowpre"[u] = "pre"[v]$.
 Since $v$ is the first vertex encountered in $D$, it must be that $"pre"[v] < "pre"[u]$ for all $u in D$.
-Therefore, only one vertex satisfies the condition $"lowpre"[u] = "pre"[u]$ in $D$, which is $v$ itself.
+Therefore, only one vertex satisfies the condition $"lowpre"[u] = "pre"[u]$ in $D$, which is $v$ itself (others must have a greater $"pre"$ value than $v$ while having the same $"lowpre"$ value).
 Therefore, no vertices are removed from the stack when `explore` is called on any other vertex in $D$. // clarification about vertices outside of D?
 Since $v$ is the first vertex encountered in $D$, it must be that all vertices in $D$ are pushed onto the stack after $v$.
 Since the `explore` subroutine touches all vertices in $D$ during the DFS traversal and pushes them onto the stack above $v$, it must be that all these vertices are popped off the stack when $T_v$ is constructed.
 Therefore, any $u in D$ must also be in $T_v$, so we have $D subset.eq T_v$.
+#align(right, $qed$)
+
 
 === $T_v subset.eq D$.
 Assume, to the contrary, that there exists a vertex $u in T_v$ such that $u in.not D$.
@@ -323,8 +339,12 @@ However, since $D$ is a sink SCC, there cannot be any edges from $D$ to any vert
 Therefore, $T_v subset.eq D$ must hold.
 
 Therefore, we have $D = T_v$.
+#align(right, $qed$)
+
 
 ==
+
+=== Full Correctness
 _Proof:_
 Consider the graph with nodes consisting of the SCCs of the original graph, and edges consisting of edges between SCCs in the original graph.
 Let this graph be $G'$, it is a DAG.
@@ -344,4 +364,11 @@ We perform induction on $m$.
   By the inductive hypothesis, the algorithm will correctly identify the next sink SCC in $G'$ and return the correct set of vertices in that SCC.
 
 Therefore, by induction, the algorithm is correct for all $m$ SCCs.
+#align(right, $qed$)
+
+=== Runtime
+Each edge is examined at most twice: once during the `explore` subroutine and once during the `postvisit` routine.
+Each node is accessed at most once during `modified dfs`, once during `previsit`, and twice during `postvisit`: once when it is first visited and once when it is popped off stack to construct the SCC.
+Therefore, the runtime of the algorithm is $O(|E| + |V|)$.
+
 #align(right, $qed$)

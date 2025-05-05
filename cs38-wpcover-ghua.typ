@@ -3,3 +3,4 @@
 3. Link to documents change history: https://github.com/gavin-hyl/cs38
 4. Textbook: N/A
 5. Online sources: N/A
+6. Collaborators: Gio Huh
