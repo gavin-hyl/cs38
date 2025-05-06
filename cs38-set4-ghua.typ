@@ -151,7 +151,7 @@ Adding the inner loop, which takes $O(|E|)$ time in total across all iterations,
     + for each neighbor $u$ of $v$:
       + if $u$ is in $a$:
         + remove $u$ from $a["deg"[u]]$
-        + decrement $"deg"[u]$ by 2
+        + decrement $"deg"[u]$ by 2 \/\/ _If u is chosen, the edge (u, v) no longer contributes (-1), and removes one edge from the cut (-1)_
         + if $"deg"[u] <= 0$:
           + remove $u$ from $a$
         + else:
@@ -166,6 +166,12 @@ Adding the inner loop, which takes $O(|E|)$ time in total across all iterations,
 
 
 === Runtime
-The 
+The initial pass through the vertices to determine the max degree and to populate the array $a$ takes $O(|V|)$ time. 
+In the worst case, since at least one vertex is removed from $a$ in each iteration of the while loop, the while loop will run at most $|V|$ times.
+In each iteration of the while loop, we iterate through the neighbors of the vertex $v$ being added to $S$.
+Since all operations are constant time within this inner loop, the inner loop takes $O(|E|)$ time in total across all iterations.
+Therefore, the total runtime of the algorithm is $O(|V| + |E|) = O(m+n)$.
+
+#align(right, $qed$)
 
 == Counterexample: Suboptimal Result from Algorithm
