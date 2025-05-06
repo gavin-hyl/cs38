@@ -75,7 +75,8 @@ We use induction on the the number of iterations of the loop. Let $G_k = (V'_k, 
 We note that $V_1$ at the beginning of the $(k+1)$th iteration of the loop is nonempty.
 Assume, to the contrary, that $V_1$ is empty after $k$ iterations.
 This would imply that all vertices in $G_k$ have degree greater than $1$, which implies at least $(2 |V'_k|) / 2 = |V'_k| > |V_k|-1$ edges.
-This means there must be a cycle in $G_k$, which contradicts the fact that $G_k$ was constructed by removing vertices and edges from a tree.
+This means there must be a cycle in $G_k$, which contradicts the fact that $G_k$ was constructed by removing vertices and edges from a tree, which cannot contain cycles.
+(If $G_k$ did contain a cycle, adding back the removed vertices and edges would create a cycle in $G$, which is a contradiction.)
 
 === Invariance
 We claim that every iteration of the loop maintains the invariant that the remaining vertices and graph has a perfect matching if and only if the original graph $G$ did.
@@ -116,3 +117,13 @@ We now note that the algorithm must terminate after at most $1/2|V|$ iterations 
 Therefore, the algorithm returns true if and only if the original graph $G$ has a perfect matching.
 
 #align(right, $qed$)
+
+== Runtime
+Constructing the set $V_1$ initially takes $O(|V|)$ time, since we must iterate through all vertices in the graph.
+The while loop runs at most $1/2|V|$ times, since each iteration removes exactly one vertex and its neighbor from the graph.
+In each iteration, selection from $V_1$ is constant time.
+Since we remove an edge from the graph after examining it, iterating over the edges and removing them takes $O(|E|)$ time *in total, across all iterations*.
+Removing $u$ also takes $O(1)$ time.
+Therefore, the loop (without the inner loop) takes $O(|V|)$ time in total.
+Adding the inner loop, which takes $O(|E|)$ time in total across all iterations, we have that the total runtime of the algorithm is $O(|V| + |E|)$, which is linear in the size of the input graph.
+
