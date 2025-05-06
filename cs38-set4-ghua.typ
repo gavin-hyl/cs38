@@ -70,6 +70,7 @@ We use induction on the the number of iterations of the loop. Let $G_k = (V'_k, 
   This is exactly what the algorithm does in the loop: if $(u, w)$ is removed from $E'_k$, then the degree of $w$ is decreased by $1$.
   Therefore, if $w$ has degree $2$ before the $(k+1)$th iteration of the loop, then it must have degree $1$ after the loop, so it should be added to $V_1$.
   No other vertices are changed in degree, so the additions and removals are correct and complete.
+#align(right, $qed$)
 
 === $V_1$ set is nonempty <v1_nonempty>
 We note that $V_1$ at the beginning of the $(k+1)$th iteration of the loop is nonempty.
@@ -77,6 +78,7 @@ Assume, to the contrary, that $V_1$ is empty after $k$ iterations.
 This would imply that all vertices in $G_k$ have degree greater than $1$, which implies at least $(2 |V'_k|) / 2 = |V'_k| > |V_k|-1$ edges.
 This means there must be a cycle in $G_k$, which contradicts the fact that $G_k$ was constructed by removing vertices and edges from a tree, which cannot contain cycles.
 (If $G_k$ did contain a cycle, adding back the removed vertices and edges would create a cycle in $G$, which is a contradiction.)
+#align(right, $qed$)
 
 === Invariance
 We claim that every iteration of the loop maintains the invariant that the remaining vertices and graph has a perfect matching if and only if the original graph $G$ did.
@@ -115,7 +117,6 @@ We now note that the algorithm must terminate after at most $1/2|V|$ iterations 
   Therefore, if the algorithm returns false, then the graph $G_k$ (and by extension the graph $G$) must not have had a perfect matching.
 
 Therefore, the algorithm returns true if and only if the original graph $G$ has a perfect matching.
-
 #align(right, $qed$)
 
 == Runtime
@@ -126,4 +127,45 @@ Since we remove an edge from the graph after examining it, iterating over the ed
 Removing $u$ also takes $O(1)$ time.
 Therefore, the loop (without the inner loop) takes $O(|V|)$ time in total.
 Adding the inner loop, which takes $O(|E|)$ time in total across all iterations, we have that the total runtime of the algorithm is $O(|V| + |E|)$, which is linear in the size of the input graph.
+#align(right, $qed$)
 
+
+#pagebreak()
+=
+
+==
+=== Algorithm
+#pseudocode-list(booktabs: true, title: smallcaps[GreedyMaxCut])[
+  - *Input* an undirected graph $G = (V, E)$
+  - *Output* a tuple of vertex sets $S, V-S$ such that $E(S, V-S) >= m/2$
+  + let $a$ be an empty array of length $|V|$, in which each element is an empty set
+  + let $d$ (best degree of vertex to add) be $0$
+  + let $S$ be an empty set of vertices
+  + initialize all $"deg"[v]$ to the degree of vertex $v$ in $G$
+  + for each vertex $v$ in $V$:
+    + add $v$ to $a["deg"[v]]$
+    + $d = max{d, "deg"[v]}$
+  + while $a$ is not empty:
+    + let $v$ be an arbitrary vertex in $a[d]$
+    + remove $v$ from $a[d]$, and add it to $S$
+    + for each neighbor $u$ of $v$:
+      + if $u$ is in $a$:
+        + remove $u$ from $a["deg"[u]]$
+        + decrement $"deg"[u]$ by 2
+        + if $"deg"[u] <= 0$:
+          + remove $u$ from $a$
+        + else:
+          + add $u$ to $a["deg"[u]]$
+    + while $a[d]$ is empty and $d > 0$:
+      + decrement $d$
+  + return $(S, V - S)$
+]
+
+
+=== Value Bound
+
+
+=== Runtime
+The 
+
+== Counterexample: Suboptimal Result from Algorithm
