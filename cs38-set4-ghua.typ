@@ -138,40 +138,26 @@ Adding the inner loop, which takes $O(|E|)$ time in total across all iterations,
 #pseudocode-list(booktabs: true, title: smallcaps[GreedyMaxCut])[
   - *Input* an undirected graph $G = (V, E)$
   - *Output* a tuple of vertex sets $S, V-S$ such that $E(S, V-S) >= m/2$
-  + let $a$ be an empty array of length $|V|$, in which each element is an empty set
-  + let $d$ (best degree of vertex to add) be $0$
-  + let $S$ be an empty set of vertices
-  + initialize all $"deg"[v]$ to the degree of vertex $v$ in $G$
-  + for each vertex $v$ in $V$:
-    + add $v$ to $a["deg"[v]]$
-    + $d = max{d, "deg"[v]}$
-  + while $a$ is not empty:
-    + let $v$ be an arbitrary vertex in $a[d]$
-    + remove $v$ from $a[d]$, and add it to $S$
-    + for each neighbor $u$ of $v$:
-      + if $u$ is in $a$:
-        + remove $u$ from $a["deg"[u]]$
-        + decrement $"deg"[u]$ by 2 \/\/ _If u is chosen, the edge (u, v) no longer contributes (-1), and removes one edge from the cut (-1)_
-        + if $"deg"[u] <= 0$:
-          + remove $u$ from $a$
-        + else:
-          + add $u$ to $a["deg"[u]]$
-    + while $a[d]$ is empty and $d > 0$:
-      + decrement $d$
-  + return $(S, V - S)$
+  + let $S, S'$ be empty sets
+  + for all $v in V$:
+    + $"in"[v]$ is the number of neighbors in $S$
+    + $"out"[v]$ is the number of neighbors in $S'$
+    + if $"in"[v] > "out"[v]$:
+      + add $v$ to $S'$
+    + else:
+      + add $v$ to $S$
 ]
 
 
 === Value Bound
-
+_Proof:_
+Let an arbitrary vertex that the algorithm processes be $v$, and let $E_v$ be the number of edges between $v$ and the vertices in $S union S'$ (i.e., the ones that have been placed).
+Since the algorithm always maximizes the edges in $E_v$ that are made crossing, and the edges in $E_v$ are determined after $v$'s assignment (since both end points are either in $S$ or $S'$), we know that at least $E_v / 2$ edges are made crossing.
 
 === Runtime
-The initial pass through the vertices to determine the max degree and to populate the array $a$ takes $O(|V|)$ time. 
-In the worst case, since at least one vertex is removed from $a$ in each iteration of the while loop, the while loop will run at most $|V|$ times.
-In each iteration of the while loop, we iterate through the neighbors of the vertex $v$ being added to $S$.
-Since all operations are constant time within this inner loop, the inner loop takes $O(|E|)$ time in total across all iterations.
-Therefore, the total runtime of the algorithm is $O(|V| + |E|) = O(m+n)$.
-
-#align(right, $qed$)
+Each vertex is processed once in the loop, which is $O(n)$
+Moreover, each edge is inspected at most twice, once from each end point of the edge, which is $O(m)$.
+Lastly, checking whether an element belongs in a set and all comparisons in the loop are constant time.
+Therefore, all loops together take $O(m+n)$.
 
 == Counterexample: Suboptimal Result from Algorithm
