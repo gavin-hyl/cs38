@@ -173,11 +173,26 @@ Assume, to the contrary, that $sum_(v in V) E_v != m$.
 Therefore, by contradiction, $sum_(v in V) E_v = m$.
 
 Since at least half of each $E_v$ is included in the final cut, it must be the case that the final cut contains at least $m/2$ edges.
+#align(right, $qed$)
 
 === Runtime
 Each vertex is processed once in the loop, which is $O(n)$
 Moreover, each edge is inspected at most twice, once from each end point of the edge, which is $O(m)$.
 Lastly, checking whether an element belongs in a set and all comparisons in the loop are constant time.
 Therefore, all loops together take $O(m+n)$.
+#align(right, $qed$)
+
 
 == Counterexample: Suboptimal Result from Algorithm
+The first figure below describes how the algorithm executes. 
+The numbers in the circles describe the loop indices, and the in/out labels describe the in/out values associated with the node.
+The color of the node describes the final assignment, where red is $S$ and blue is $S'$.
+The cut edges are shown in yellow.
+As shown, the algorithm terminates with $E = 3$.
+#image("figures/set4/q2b2.jpg", width: 45%)
+
+The second figure below describes the optimal solution. As shown, $E^* = 4$.
+The cut edges are shown in yellow.
+#image("figures/set4/q2b1.jpg", width: 45%)
+
+#align(right, $qed$)
