@@ -75,7 +75,7 @@ We use induction on the the number of iterations of the loop. Let $G_k = (V'_k, 
 === $V_1$ set is nonempty <v1_nonempty>
 We note that $V_1$ at the beginning of the $(k+1)$th iteration of the loop is nonempty.
 Assume, to the contrary, that $V_1$ is empty after $k$ iterations.
-This would imply that all vertices in $G_k$ have degree greater than $1$, which implies at least $(2 |V'_k|) / 2 = |V'_k| > |V_k|-1$ edges.
+This would imply that all vertices in $G_k$ have degree greater than $1$ (or degree $0$, but if we encountered any we would have returned false), which implies at least $(2 |V'_k|) / 2 = |V'_k| > |V_k|-1$ edges.
 This means there must be a cycle in $G_k$, which contradicts the fact that $G_k$ was constructed by removing vertices and edges from a tree, which cannot contain cycles.
 (If $G_k$ did contain a cycle, adding back the removed vertices and edges would create a cycle in $G$, which is a contradiction.)
 #align(right, $qed$)
@@ -152,7 +152,27 @@ Adding the inner loop, which takes $O(|E|)$ time in total across all iterations,
 === Value Bound
 _Proof:_
 Let an arbitrary vertex that the algorithm processes be $v$, and let $E_v$ be the number of edges between $v$ and the vertices in $S union S'$ (i.e., the ones that have been placed).
-Since the algorithm always maximizes the edges in $E_v$ that are made crossing, and the edges in $E_v$ are determined after $v$'s assignment (since both end points are either in $S$ or $S'$), we know that at least $E_v / 2$ edges are made crossing.
+Since the algorithm always maximizes the edges in $E_v$ that are made crossing, and the edges in $E_v$ are determined after $v$'s assignment (since both end points are either in $S$ or $S'$), we know that at least $E_v / 2$ edges are made crossing in the final assignment.
+
+We now prove the claim that $sum_(v in V) E_v = m$.
+That is, after all loops finish, all edges have been considered once and only once.
+Assume, to the contrary, that $sum_(v in V) E_v != m$.
+- Case 1: $sum > m$.
+  By the pigeonhole principle, there must be at least one edge that is considered twice.
+  Since each edge can be considered at most once for one iteration in the loop, which considers one vertex, it must be the case that the edge was considered in two separate iterations in the algorithm.
+  Let the edge be $(u, v)$. WLOG, let $u$ be the vertex that is visited first.
+  For the edge to contribute to $E_u$, it must be that $v$ is in $S union S'$.
+  However, since a vertex must be visited before being place into $S union S'$, it must be that $v$ is visited first, which is a contradiction.
+  Therefore, $sum <= m$.
+- Case 2: $sum < m$.
+  Again by the pigeonhole principle, there must be at least one edge that is not considered.
+  Let that edge be $(u, v)$.
+  It must be the case that when $u$ is visited, $v in.not S union S'$, which means that $u$ is visited first.
+  However, the same argument holds for $v$, so $v$ must be visited first.
+  This is a contradiction. Therefore, $sum >= m$.
+Therefore, by contradiction, $sum_(v in V) E_v = m$.
+
+Since at least half of each $E_v$ is included in the final cut, it must be the case that the final cut contains at least $m/2$ edges.
 
 === Runtime
 Each vertex is processed once in the loop, which is $O(n)$
