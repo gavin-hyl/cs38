@@ -26,6 +26,12 @@ let levels = nums.pos();
 
 =
 == Correctness and Formulation
+NOTE: since the main work of the correctness proof is in the subproblem construction, which then gives rise to the ordering, we unravel the induction proof into three separate parts: subproblems, ordering, and initialization.
+The inductive proof can be reconstructed by:
+1. Inductive hypothesis: all subproblems before the current one in the topological ordering are correct (ordering)
+2. Base case: the base case is correct by the initialization step
+3. Inductive step: since we proved that the relationship is correct, the current subproblem is also correct.
+
 We employ dynamic programming to solve this problem.
 We first identify the major components of any DP algorithm.
 - Let the subproblems be denoted as $D[i, j]$ ($1 <= i <= m, 1 <=j <= n$), where $D[i, j]$ is the optimal cost of removing pixels from rows $1,..., i$, and specifically removing the pixel $(i, j)$.
@@ -44,6 +50,9 @@ We first identify the major components of any DP algorithm.
   At each step $(i, j_i)$, we choose $j_(i-1) in [j_i, j_i+1, j_i-1]$ such that $D[i-1, j_(i-1)]$ is minimized, essentially reversing the process of constructing $D(i, j_i)$.
   Algorithmically, this can be completed by storing the $j_(i-1)$ when the subproblems are first solved.
   The final answer can be expressed as the list $[..., (i, j_i), ...]$.
+
+*Correctness of the algorithm* can be proven by strong induction, with the hypothesis that all subproblems $D[i', j']$ with $0 <= i' <= i$ and $0 <= j' <= j$ are correct.
+The "initialization" section proved the base case, while the inductive step is given by the first section.
 
 == Algorithm
 ```
@@ -86,6 +95,13 @@ Therefore, the total runtime is $O(m n + m) = O(m n)$.
 =
 
 == Correctness and Formulation
+
+NOTE: since the main work of the correctness proof is in the subproblem construction, which then gives rise to the ordering, we unravel the induction proof into three separate parts: subproblems, ordering, and initialization.
+The inductive proof can be reconstructed by:
+1. Inductive hypothesis: all subproblems before the current one in the topological ordering are correct (ordering)
+2. Base case: the base case is correct by the initialization step
+3. Inductive step: since we proved that the relationship is correct, the current subproblem is also correct.
+
 We employ dynamic programming to solve this problem.
 We first identify the major components of any DP algorithm.
 
@@ -133,9 +149,12 @@ Similarly, $E[0, j, F, F]$ and $E[0, j, F, T]$ are both $oo$, since the configur
 Therefore, the only valid configuration is $E[0, j, T, F]$, which has a cost of $j + c$ ($j$ for the $j$ mismatches, and $c$ for the gap).
 
 One edge case is $E[0, 0]$, which should be $0$ regardless of the $x_g$ and $y_g$ parameters.
-This is because the empty subsequence of $x$ and $y$ has no mismatches, and thus the cost is $0$ ($x_g, y_g$ are undefined in his case).
+This is because the empty subsequence of $x$ and $y$ h as no mismatches, and thus the cost is $0$ ($x_g, y_g$ are undefined in his case).
 
 Since all subproblems decrease $i$ or $j$ by $1$, these base cases covering $M[i, 0], M[0, j]$ are sufficient for the entire matrix.
+
+*Correctness of the algorithm* can be proven by strong induction, with the hypothesis that all subproblems $E[i', j']$ with $0 <= i' <= i$ and $0 <= j' <= j$ are correct.
+This section proved the base case, while the inductive step is given by the first section.
 
 === Answer Extraction
 Similar to the previous problem, we can backtrack from the last element of the matrix.
@@ -202,40 +221,6 @@ Therefore, the total runtime is $O(m n + m + n) = O(m n)$.
 
 =
 
-== Correctness and Formulation
-
-=== Subproblems
-Let the subproblem be defined as $V[i, j]$, the maximum value that can be obtained by splitting a cloth of dimensions $i$ by $j$.
-For any piece of cloth, we can either make it into a product if the dimensions match perfectly, or split it into two pieces, or discard it if it is too small.
-- If the cloth is too small to be split (base case), i.e., $i < min(a_i)$ or $j < min(b_i)$, then the value is $V[i, j] = 0$.
-- If the dimensions match perfectly, then the value is $V[i=a_k, j=b_k] = c_k$. For notational convenience, denote the products as $P$, where the $i, j$ element of $P$ is $0$ if there does not exist a product of dimensions $i, j$, and $c_k$ if there does exist a product of dimensions $i, j$.
-- If we cut along $x$, we can cut into two pieces of dimensions $x, j$ and $i-x, j$.
-  The value of this cut is $V[i, j] = max_x {V[x, j] + V[i-x, j]}$.
-- Similarly, if we cut along $y$, we can cut into two pieces of dimensions $i, y$ and $i, j-y$.
-  The value of this cut is $V[i, j] = max_y {V[i, y] + V[i, j-y]}$.
-Therefore, we can express the recurrence as:
-$
-  V [i, j] = max{P[i, j], max_x {V[x, j] + V[i-x, j]}, max_y {V[i, y] + V[i, j-y]}}
-$
-
-=== Ordering
-We note that each subproblem $V[i, j]$ only depends on subproblems of the form $V[i-x, j], V[i, j-y], V[x, j], V[i, y]$.
-This means that each subproblems only depends on subproblems with non-greater $i$ or $j$.
-This gives rise to a natural ordering of the subproblems.
-We can process the $V[i, j]$ in increasing order of $i$ and $j$.
-One possible ordering is to process the $V[i, j]$ in increasing order of $j$ from $1$ to $n$, and for each $j$, process in increasing order of $i$ from $1$ to $m$.
-By definition, this means that all subproblems with $i <= i'$ and $j <= j'$ (except for $i = i' and j = j'$) are processed before $V[i', j']$.
-
-
-=== Initialization
-We initialize the smallest possible $i$ and $j$ values for $V[i,j]$.
-$V[i, 0]$ and $V[0, j]$ are both $0$ for all valid $i, j$, since in that case, the cloth has no area.
-
-
-=== Answer Extraction
-By definition, the answer is given by $V[X,Y]$.
-
-
 == Algorithm
 ```
 // Input: cloth dimensions X*Y, products a_i*b_i, costs c_i
@@ -256,6 +241,41 @@ FOR i = 1:X
 
 RETURN V[X, Y]
 ```
+
+== Correctness and Formulation
+=== Subproblems
+We use strong induction to prove correctness.
+The inductive hypothesis is that for any pair $(i, j)$, all subproblems $V[a, b]$ with $0 <= a <= i$ and $0 <= b <= j$ are correct.
+- Base case: $V[0, 0] = 0$, since the cloth has no area. Moreover, $V[i, 0]$ and $V[0, j]$ are both $0$ for all valid $i, j$, since in that case, the cloth has no area.
+- Inductive step: Assume that the inductive hypothesis holds for all pairs $(i', j')$ such that $i' <= i$ and $j' <= j$ (except for $i' = i$ and $j' = j$).
+  This is given by the ordering, which is shown in the next section.
+  We must show that the inductive hypothesis holds for $(i, j)$.
+  By definition, $V[i, j]$ is the maximum value of the cloth of dimensions $i$ by $j$, which can be obtained by either making it into a product if the dimensions match perfectly, or splitting it into two pieces, or discarding it if it is too small.
+  - If the dimensions match perfectly, then the value is $V[i=a_k, j=b_k] = c_k$.
+    For notational convenience, denote the products as $P$, where the $i, j$ element of $P$ is $0$ if there does not exist a product of dimensions $i, j$, and $c_k$ if there does exist a product of dimensions $i, j$.
+  - If we cut along $x$, we can cut into two pieces of dimensions $x, j$ and $i-x, j$.
+    The value of this cut is $V[i, j] = max_x {V[x, j] + V[i-x, j]}$, since by the inductive hypothesis, we know that $V[x, j]$ and $V[i-x, j]$ are both correct.
+  - Similarly, if we cut along $y$, we can cut into two pieces of dimensions $i, y$ and $i, j-y$.
+    The value of this cut is $V[i, j] = max_y {V[i, y] + V[i, j-y]}$, since by the inductive hypothesis, we know that $V[i, y]$ and $V[i, j-y]$ are both correct.
+
+  Therefore, we can express the recurrence as:
+  $
+    V [i, j] = max{P[i, j], max_x {V[x, j] + V[i-x, j]}, max_y {V[i, y] + V[i, j-y]}}
+  $
+  which is the recurrence relationship executed in the algorithm.
+
+By definition, the answer is given by $V[X,Y]$.
+
+=== Ordering
+We note that each subproblem $V[i, j]$ only depends on subproblems of the form $V[i-x, j], V[i, j-y], V[x, j], V[i, y]$.
+This means that each subproblems only depends on subproblems with non-greater $i$ or $j$.
+This gives rise to a natural ordering of the subproblems.
+We can process the $V[i, j]$ in increasing order of $i$ and $j$.
+One possible ordering is to process the $V[i, j]$ in increasing order of $j$ from $1$ to $n$, and for each $j$, process in increasing order of $i$ from $1$ to $m$.
+By definition, this means that all subproblems with $i <= i'$ and $j <= j'$ (except for $i = i' and j = j'$) are processed before $V[i', j']$.
+
+
+
 == Runtime
 The first part of the algorithm is $O(n)$, since we iterate through all products and perform one operation for each.
 The second part of the algorithm considers $X*Y$ subproblems (elements in the matrix $V$).
@@ -264,6 +284,9 @@ This gives $O(i+j)$ operations per subproblem.
 Since $i<=X, j<=Y$, we know that $O(i+j)$ is bounded by $O(X+Y)$.
 Since there are $X*Y$ subproblems, the second part of the algorithm is $O(X Y (X+Y))$.
 Therefore, the total runtime is $O(n + X Y  (X+Y))$.
+
+
+
 
 =
 
