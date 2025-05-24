@@ -33,9 +33,8 @@ $
 $
 where $a, b, e_1, ..., e_n$ are the decision variables.
 
-We show that the optimal solution to the original problem (with cost $C_1$) is equivalent to the optimal solution of this LP (with cost $C_2$).
+We show that the optimal solution to the original problem (with cost $C_1$) is equivalent to the optimal solution of this LP (with cost $C_2$). Let $a^*, b^*$ be the optimal solution to the original problem. We will show it is both feasible and optimal for the LP.
 - Feasibility: we show that any optimal solution to the original problem satisfies the constraints of this LP.
-  Suppose the original problem has an optimal solution $(a^*, b^*)$.
   *Define* $e_i^* = |y_i - (a^* + b^* x_i)|$.
   Since $e_i^* = |y_i - (a^* + b^* x_i)|$, we have $e_i^* >= 0, e_i^* >= y_i - (a^* + b^* x_i), e_i^* >= -(y_i - (a^* + b^* x_i))$, which satisfies all constraints of this LP.
   Moreover, the cost of this LP is $C_2 = sum_i e_i^* = sum_i |y_i - (a^* + b^* x_i)|$, which is exactly the cost of the original problem.
@@ -47,11 +46,16 @@ We show that the optimal solution to the original problem (with cost $C_1$) is e
   Therefore, there does not exist any solution to the LP that has a cost strictly less than the cost of the original problem.
   $C_2 >= C_1$.
 
-In sum, since both $C_1 >= C_2$ and $C_2 >= C_1$, we have $C_1 = C_2$.
+Therefore, we have $C_1 = C_2$.
+By the first argument, we have constructed a solution to the LP that has cost $C_2 = C_1$, so that solution must be optimal for the LP.
+Its decision variables were defined as $a=a^*, b=b^*, e_1^*, ..., e_n^*$, so the optimal solution to the LP contains $a^*, b^*$, which is the optimal solution to the original problem.
+#align(right, $qed$)
+
+
 
 =
 
-==
+== (with warmup)
 Let the paths be $P_1, P_2, ..., P_k$, and the flow that passes through $P_i$ be $F_i$.
 The reformulated linear program is
 $
@@ -67,9 +71,78 @@ The three constraints we need to respect are:
 
 By maximizing the sum of all flows, the total flow from $s$ to $t$ is maximized since each path starts from $s$ and ends at $t$.
 
+==
+We first place the LP in the previous section into standard matrix form.
+We note that $ c = bb(1)_k, b = vec(dots.v, f_e, dots.v), x = vec(dots.v, F_i, dots.v) $
 
+The second constraint restricting the flow on each edge can be expressed as
+$
+  sum_(i=1)^k F_i dot bb(1)[e in P_i]<= f_e\
+  (..., bb(1)[e in P_i], ...) vec(dots.v, F_i, dots.v) <= f_e\
+$
+Define the first row vector to be $A_e$, which has a $1$ in the $i$-th position if edge $e$ is in path $P_i$, and 0 otherwise.
+Stacking these row vectors for all edges $e$ gives us a matrix $A in RR^(|E| times k)$, where the $i, j$ entry is $1$ if edge $e_i$ is in path $P_j$, and 0 otherwise.
+We can then write the LP as
+$
+  max c^top x\
+  "s.t." A x <= b, x >= 0\
+$
+
+Therefore, the dual is given by
+$
+  min y^top b = sum_e y_e f_e \
+  "s.t." y^top A >= c^top = bb(1)_k^top, y >= 0\
+$
+where $y in RR^(|E|)$.
+Unraveling the matrix multiplication, we have
+$
+  forall i in [1, k]: y^top A_(*i) >= 1
+$
+where $A_(*i)$ is the $i$-th column of $A$.
+Unraveling further, we have
+$
+  forall i in [1, k]: sum_(e in P_i) y_e >= 1\
+$
+
+
+==
+Let the cut be across the edges $e_1, e_2, ..., e_m$.
+The corresponding feasible solution in the dual is given by
+$y_e = 1$ for all $e in {e_1, e_2, ..., e_m}$, and $y_e = 0$ otherwise.
+We first show that this is feasible.
+- $y>=0$ is trivially satisfied by definition.
+- We use the form $forall i in [1, k]: sum_(e in P_i) y_e >= 1$ instead of $y^top A >= c^top$.
+  For each path $P_i$, we have $sum_(e in P_i) y_e = |{e in P_i: e in {e_1, e_2, ..., e_m}}|$.
+  Since $P_i$ is a path from $s$ to $t$, it must cross at least one edge in the cut, so $|{e in P_i: e in {e_1, e_2, ..., e_m}}| >= 1$.
+  Therefore, $forall i: sum_(e in P_i) y_e >= 1$ is satisfied.
+We then show that the cost of the solution is equal to the capacity of the cut.
+The cost of the solution is given by
+$
+  sum_e y_e f_e = sum_(e in {e_1, e_2, ..., e_m}) f_e\
+$
+Since the capacity of the cut is defined as the total capacity of the edges crossing the cut, it is equal to the cost of the solution by definition.
+#align(right, $qed$)
 
 =
+
+== Algorithm
+```
+
+
+
+
+```
+
+
+
+== Correctness
+
+== Runtime
+
+
+
+*warmup*
+
 We employ dynamic programming to solve this problem.
 
 We define $C[i, j]$ to be the minimum cost of the binary tree constructed of integers $i$ to $j$, and let $P[i, j] = sum_(k=i)^j p_k$.
