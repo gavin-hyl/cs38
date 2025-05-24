@@ -83,11 +83,11 @@ RETURN best_seam
 ```
 
 == Runtime
-There are $m n$ subproblems.
+There are $m n$ subproblems, and we consider each one only once.
 In each subproblem, we compare three different options and perform a constant number of operations of storing into memory.
 This is $O(m n)$.
 In the backtracking process, the algorithm considers $m$ subproblems to construct the list, with each subproblem being processed in constant time.
-This is $O(m)$
+This is $O(m)$.
 Therefore, the total runtime is $O(m n + m) = O(m n)$.
 
 
@@ -209,7 +209,7 @@ RETURN best_match
 
 
 == Runtime
-There are $m n$ subproblems (elements in the matrix $M$).
+There are $m n$ subproblems (elements in the matrix $M$), and we consider each one only once.
 In each subproblem, we solve for $3$ different elements, each of which requires $3$ comparisons and a constant number of operations of storing into memory.
 Therefore, processing each subproblem is $O(3*3) = O(1)$.
 In the backtracking process, since each loop iteration must decrease $i$ or $j$ by $1$, it must run at most $m+n$ times.
@@ -228,18 +228,30 @@ Therefore, the total runtime is $O(m n + m + n) = O(m n)$.
 
 V = empty m*n matrix, initialized to 0
 P = empty max(a_i)*max(b_i) matrix, initialized to 0
+CHOICE = empty m*n matrix, initialized to null. This is used to store the choice made in each subproblem.
 FOR i = 1:n
   P[a_i, b_i] = c_i
 
 FOR i = 1:X
   FOR j = 1:Y
     V[i, j] = P[i, j]
+    CHOICE[i, j] = "PROD"
     FOR x = 1:i-1
-      V[i, j] = max{V[i, j], V[x, j] + V[i-x, j]}
+      if V[i, j] < V[x, j] + V[i-x, j]
+        CHOICE[i, j] = ("X", x)
     FOR y = 1:j-1
-      V[i, j] = max{V[i, j], V[i, y] + V[i, j-y]}
+      if V[i, j] < V[i, y] + V[i, j-y]
+        CHOICE[i, j] = ("Y", y)
+        V[i, j] = V[i, y] + V[i, j-y]
 
-RETURN V[X, Y]
+
+strategy = []
+init_prob = (X, Y)
+find the best choice in CHOICE[X, Y]
+cut along the best choice. If subproblems are generated, recursively call the choices on the subproblems.
+add the best choices on the subproblems to the strategy list and keep track of which cuts are made on which subproblems.
+
+RETURN strategy
 ```
 
 == Correctness and Formulation
@@ -264,7 +276,13 @@ The inductive hypothesis is that for any pair $(i, j)$, all subproblems $V[a, b]
   $
   which is the recurrence relationship executed in the algorithm.
 
-By definition, the answer is given by $V[X,Y]$.
+=== Answer Extraction
+Let $i, j$ be the dimensions of the cloth in question of a subproblem.
+If the optimal solution is to make it into a product, then the backtracking process is trivial and stops here.
+if the optimal solution is to cut along $x$, then the two subproblems are $V[x, j]$ and $V[i-x, j]$, which are strictly smaller in size.
+if the optimal solution is to cut along $y$, then the two subproblems are $V[i, y]$ and $V[i, j-y]$, which are strictly smaller in size.
+Therefore, we can execute the best strategy by recursively accessing the best choice in the `CHOICE` matrix until we reach the base case
+(either the cloths are too small or we make them into products).
 
 === Ordering
 We note that each subproblem $V[i, j]$ only depends on subproblems of the form $V[i-x, j], V[i, j-y], V[x, j], V[i, y]$.
@@ -278,12 +296,13 @@ By definition, this means that all subproblems with $i <= i'$ and $j <= j'$ (exc
 
 == Runtime
 The first part of the algorithm is $O(n)$, since we iterate through all products and perform one operation for each.
-The second part of the algorithm considers $X*Y$ subproblems (elements in the matrix $V$).
+The second part of the algorithm considers $X*Y$ subproblems (elements in the matrix $V$), and considers each one only once.
 In each subproblem, we must check all $x$ and $y$ values that are less than $i$ and $j$, respectively.
 This gives $O(i+j)$ operations per subproblem.
 Since $i<=X, j<=Y$, we know that $O(i+j)$ is bounded by $O(X+Y)$.
-Since there are $X*Y$ subproblems, the second part of the algorithm is $O(X Y (X+Y))$.
-Therefore, the total runtime is $O(n + X Y  (X+Y))$.
+Since there are $X Y$ subproblems, the second part of the algorithm is $O(X Y (X+Y))$.
+The backtracking process takes at most $O(X Y)$ time, since the maximum number of cuts is $X Y$ (cutting along every possible $x$ and $y$).
+Therefore, the total runtime is $O(n + X Y  (X+Y) + X Y) = O(n + X Y  (X+Y))$.
 
 
 
@@ -323,6 +342,8 @@ Therefore, there cannot exist a path from $v in V \\ {q, q'}$ to $q$ or $q'$.
 This means that $R^*$ is not a valid solution, since it does not connect all nodes.
 This is a contradiction.
 
+Since it is possible to connect all cities, we can assume that all $q$ are connected to one $t in T$.
+
 We then show that $forall q in Q$, in the optimal solution, $q$ must be connected to the node $t in T$ that minimizes the cost $w(q, t)$.
 Assume, to the contrary, that $(q, t') in R^*$, which is not the minimum cost edge.
 Consider the set of edges $R' = R^* - (q, t') + (q, t)$, which has a strictly lower cost than $R^*$.
@@ -343,9 +364,17 @@ Therefore, we have constructed a valid solution $R'$ that is strictly cheaper th
 The problem is now reduced the MST problem on $T$, since by connecting all $t in T$, the $q$ nodes are automatically connected, since all are already connected one $t in T$.
 We can then use Kruskal's algorithm to find the minimum spanning tree of $T$, which is already proven to be correct.
 
+Since $R$ is known to connect all cities under the constraint that all quiet cities are only connected to one road, we know that there exists an MST of $T$.
+Assume, to the contrary, that there does not exist an MST of $T$.
+This must mean that there are two nodes $t_1, t_2$ that are not connected to each other if the path is constrained to $T$.
+However, since $R$ is known to connect all cities, there must be a path from $t_1 -> t_2$ in $R$.
+This means that the path in $R$ must go through a quiet city $q$.
+However, as shown above, $q$ cannot be an intermediate vertex in the path, since it is only connected to one edge, which is a contradiction.
+Therefore, we can conclude that there exists an MST of $T$.
+
 We can then add the edges $(q, t)$ to the MST of $T$ to get the final solution.
 
-Therefore, we have generated a solution that is valid and has the minimum cost.
+Therefore, we know there must exist a solution, and we have generated a solution that is valid and has the minimum cost.
 
 == Runtime
 The algorithm first processes all quiet cities $Q$, of which there are at most $n$.
@@ -353,4 +382,4 @@ To process each quiet city, we must check all edges in $R$ that are connected to
 Therefore, the worst case is $O(n |R|)$ to process all quiet cities.
 Kruskal's algorithm is $O(|R| log |R|)$.
 Therefore, the total runtime is $O(n |R| + |R| log |R|)$.
-Since $(n+|R|)^2 = n^2 + 2n |R| + |R|^2 > n |R| + |R| log |R|$, this algorithm is $O((n+|R|)^2)$polynomial in the size of the input.
+Since $(n+|R|)^2 = n^2 + 2n |R| + |R|^2 > n |R| + |R| log |R|$, this algorithm is $O((n+|R|)^2)$, polynomial in the size of the input.
