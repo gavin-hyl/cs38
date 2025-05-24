@@ -32,14 +32,22 @@ $
   "s.t." forall i: e_i >= 0, e_i >= y_i - (a + b x_i), e_i >= -(y_i - (a + b x_i))\
 $
 where $a, b, e_1, ..., e_n$ are the decision variables.
-We first show that $e_i^* = |y_i - (a+b x_i)|$.
-We can rewrite the latter two constraints as
-$
-  e_i &>= max(0, y_i - (a + b x_i), -(y_i - (a + b x_i)))\
-  &>= |y_i - (a + b x_i)|\
-$
-Since changing $e_i$ does not affect any other constraints, and our goal is to minimize the sum of $e_i$, we have $e_i^* = |y_i - (a + b x_i)|$.
 
+We show that the optimal solution to the original problem (with cost $C_1$) is equivalent to the optimal solution of this LP (with cost $C_2$).
+- Feasibility: we show that any optimal solution to the original problem satisfies the constraints of this LP.
+  Suppose the original problem has an optimal solution $(a^*, b^*)$.
+  *Define* $e_i^* = |y_i - (a^* + b^* x_i)|$.
+  Since $e_i^* = |y_i - (a^* + b^* x_i)|$, we have $e_i^* >= 0, e_i^* >= y_i - (a^* + b^* x_i), e_i^* >= -(y_i - (a^* + b^* x_i))$, which satisfies all constraints of this LP.
+  Moreover, the cost of this LP is $C_2 = sum_i e_i^* = sum_i |y_i - (a^* + b^* x_i)|$, which is exactly the cost of the original problem.
+  Therefore, $C_1 >= C_2$.
+- Optimality: we show that any cost of the LP cannot be strictly less than the cost of the original problem.
+  Select an arbitrary solution $(a, b, e_1, ..., e_n)$ to the LP.
+  We can rewrite the constraints as $e_i >= max(0, y_i - (a + b x_i), -(y_i - (a + b x_i))) = |y_i - (a + b x_i)|$.
+  Therefore, the LP cost is $C_2 = sum_i e_i >= sum_i |y_i - (a + b x_i)|$.
+  Therefore, there does not exist any solution to the LP that has a cost strictly less than the cost of the original problem.
+  $C_2 >= C_1$.
+
+In sum, since both $C_1 >= C_2$ and $C_2 >= C_1$, we have $C_1 = C_2$.
 
 =
 
