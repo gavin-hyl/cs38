@@ -130,6 +130,7 @@ Since the capacity of the cut is defined as the total capacity of the edges cros
 
 == Algorithm
 ```
+-------------------------------
 function OptimalBST
 // Input: an array of distinct integers a[1, ..., n], an array of probs p[1, ..., n]
 // Output: a BST with minimum expected cost
@@ -141,25 +142,36 @@ root = none // root of the optimal BST
 FOR i=1:n
   FOR j=i:n
     P[i, j] = sum(p[i:j]) // O(n^3) time to compute all P[i, j]
-    R[i, j] = None
 
 FOR i=1:n
-  C[i, i] = p[i]  // cost of a single node is its probability    
+  C[i, i] = p[i]  // cost of a single node is its probability
+  R[i, i] = i // root of a single-node tree is the node itself
 
 FOR length=2:n    // we order based on the length of the subtree
   FOR i=1:n-length
     j = i + length
     C[i, j] = +inf
     FOR k=i:j     // k is the root of the subtree
-      cost = p[k] + C[i, k-1] + P[i, k-1] + C[k+1, j] + P[k+1, j]
+      cost = P[i, j] + C[i, k-1] + C[k+1, j]
       IF cost < C[i, j]
         C[i, j] = cost
         R[i, j] = k // store the root of the optimal subtree
 
+return ReconstructBST(a, R, 1, n)
 
+
+-------------------------------
 function ReconstructBST
-// Input: matrices C, R, n
-// Output: the optimal BST
+// Input: array of sorted integers a[1..n], root matrix R, start/end indices i, j
+// Output: the optimal BST of integers a[i..j]
+if i > j
+  return null
+root = new node with fields val, left, right
+k = R[i, j]
+root.val = a[k]    // the root is the integer at k
+root.left = ReconstructBST(a, R, i, k-1) // left subtree
+root.right = ReconstructBST(a, R, k+1, j) // right subtree
+return root
 ```
 
 
@@ -198,6 +210,8 @@ One caveat is that we need to ensure that $k-1 >= i$ and $k+1 <= j$, which is al
 In the context of the problem, $k = i$ or $k = j$ means that the root of the tree is the leftmost or rightmost integer, respectively.
 In that case, the left or right subtree is empty, so we can simply set $C[i,i-1]$ and $C[j+1,j]$ to $0$.
 
+The entry stored in the root matrix $R[i, j]$ is the index of the root of the optimal binary search tree for integers $i$ to $j$, which is the value of $k$ that minimizes the cost $C[i, j]$.
+
 === Ordering
 We observe that $C[i, j]$ only depends on $C[i, k-1]$ and $C[k+1, j]$, which are subproblems of smaller length. 
 Therefore, a natural ordering of the subproblems is by the length of the interval $[i, j]$.
@@ -212,15 +226,37 @@ Therefore, by the inductive hypothesis, we know that $C[i, k-1]$ and $C[k+1, j]$
 Therefore, the ordering of subproblems by length is valid, and we can compute $C[i, j]$ correctly.
 
 === Answer Extraction
+We prove the correctness of `ReconstructBST` by induction on the length of the interval $[i, j]$.
+- Base case: for length $0$, we return `null`, which is correct since there are no integers in the interval.
+- Inductive step: assume that the function works for all intervals of length $l$, and we are now computing an interval of length $l+1$.
+  The index of the root is given by $R[i, j]$, since we have shown above that $R[i, j]$ contains the index of the root of the optimal binary search tree for integers $i$ to $j$.
+  Therefore, the value of the root is correctly set to $a[R[i, j]]$.
+  The left subtree is constructed from the interval $[i, R[i, j]-1]$, and the right subtree is constructed from the interval $[R[i, j]+1, j]$.
+  By the inductive hypothesis, we know that the function works for these intervals, since they are both of length at most $l$.
+  Therefore, the left and right subtrees are constructed correctly, and their roots are correctly returned.
+  Therefore, the left and right attributes of the root node are correctly set.
+Therefore, the `ReconstructBST` function correctly reconstructs the optimal binary search tree from the root matrix $R$.
+
 
 == Runtime
+
+=== Main Algorithm
 Initialization of $P$ takes $O(n^3)$ time, since there are $O(n^2)$ pairs $(i, j)$ and each pair takes $O(n)$ time to compute the sum of probabilities.
 Initialization of $C$ takes $O(n)$ time, since there are $n$ single-node trees.
 There are $O(n^2)$ subproblems, since we can choose any $i, j$ such that $1 <= i <= j <= n$.
 The cost of each subproblem can be bounded by $O(n)$, since we only need to perform a linear scan of the integers $i$ to $j$ to compute the cost of the tree with root $k$, and there are at most $n$ such integers.
-Reconstructing the optimal tree 
+Therefore, the total time complexity of the main algorithm is $O(n^3)$.
 
-*warmup*
+=== Answer Extraction
+We first note that `ReconstructBST` will not be called on the same interval more than once, since in every level of the recursion, the interval is split into two disjoint intervals (so sub-calls will only be performed on disjoint intervals).
+Therefore, an upper bound on the number of calls to `ReconstructBST` is $O(n^2)$, since there are $O(n^2)$ pairs $(i, j)$, which is the number of distinct intervals.
+In each call, the function performs a constant amount of work to create a new node and set its attributes, which takes $O(1)$ time.
+Therefore, the total time complexity of `ReconstructBST` is $O(n^2)$.
+
+Therefore, the overall time complexity of the algorithm is $O(n^3)$, which is dominated by the main algorithm.
+
+
+*(warmup)*
 
 We employ dynamic programming to solve this problem.
 
@@ -241,6 +277,37 @@ $
 
 
 =
+
+== Algorithm
+```
+function GameOrdering
+// Input: a graph G, scores associated with the vertices a[1..n]
+// Output: an ordering of the vertices that maximizes the score
+pairs = []
+FOR i=1:n
+  add(pairs, (a[i], i)) // store the score and index as a pair
+
+quickssort pairs by first element in descending order// sort by score
+ordering = []
+FOR i=1:n
+  add(ordering, pairs[i][2]) // extract the indices from the sorted pairs
+
+return ordering
+```
+
+== Correctness
+This is a greedy algorithm.
+As such, we will prove that it is correct by an exchange argument.
+Consider an partial arbitrary optimal ordering of the vertices, which we will denote as $o_1, o_2, ..., o_m$, with $m < n$.
+
+
+== Runtime
+Creating the pairs array takes $O(n)$ time, since we iterate over all vertices and create a pair for each vertex.
+Sorting the pairs array takes $O(n log n)$ time, since that is the runtime of quicksort.
+Extracting the indices from the sorted pairs array takes $O(n)$ time, since we iterate over all pairs and extract the second element.
+Therefore, the overall time complexity of the algorithm is $O(n log n)$.
+
+*(warmup)*
 We employ a greedy algorithm to solve this problem.
 We simply visit the nodes in decreasing order of their values. 
 The intuition behind this algorithm is that we want the high-value nodes to be visited first, thereby increasing the number of times that their neighbors are visited, which increases the score.
