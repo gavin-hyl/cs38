@@ -61,7 +61,7 @@ Let the paths be $P_1, P_2, ..., P_k$, and the flow that passes through $P_i$ be
 The reformulated linear program is
 $
   max sum_(i=1)^k F_i\
-  "s.t." forall i: F_i >= 0, forall e: sum_(i "if" e in P_i) F_i <= f_e\
+  "s.t." forall i: F_i >= 0, forall e: sum_(i "if" e in P_i) F_i <= c_e\
 $
 
 Intuition: the flows on each path can be superimposed linearly to create an overall flow on the graph, just like how currents in circuits can be superimposed.
@@ -74,12 +74,12 @@ By maximizing the sum of all flows, the total flow from $s$ to $t$ is maximized 
 
 ==
 We first place the LP in the previous section into standard matrix form.
-We note that $ c = bb(1)_k, b = vec(dots.v, f_e, dots.v), x = vec(dots.v, F_i, dots.v) $
+We note that $ c = bb(1)_k, b = vec(dots.v, c_e, dots.v), x = vec(dots.v, F_i, dots.v) $
 
 The second constraint restricting the flow on each edge can be expressed as
 $
-  sum_(i=1)^k F_i dot bb(1)[e in P_i]<= f_e\
-  (..., bb(1)[e in P_i], ...) vec(dots.v, F_i, dots.v) <= f_e\
+  sum_(i=1)^k F_i dot bb(1)[e in P_i]<= c_e\
+  (..., bb(1)[e in P_i], ...) vec(dots.v, F_i, dots.v) <= c_e\
 $
 Define the first row vector to be $A_e$, which has a $1$ in the $i$-th position if edge $e$ is in path $P_i$, and 0 otherwise.
 Stacking these row vectors for all edges $e$ gives us a matrix $A in RR^(|E| times k)$, where the $i, j$ entry is $1$ if edge $e_i$ is in path $P_j$, and 0 otherwise.
@@ -91,7 +91,7 @@ $
 
 Therefore, the dual is given by
 $
-  min y^top b = sum_e y_e f_e \
+  min y^top b = sum_e y_e c_e \
   "s.t." y^top A >= c^top = bb(1)_k^top, y >= 0\
 $
 where $y in RR^(|E|)$.
@@ -119,7 +119,7 @@ We first show that this is feasible.
 We then show that the cost of the solution is equal to the capacity of the cut.
 The cost of the solution is given by
 $
-  sum_e y_e f_e = sum_(e in {e_1, e_2, ..., e_m}) f_e\
+  sum_e y_e c_e = sum_(e in {e_1, e_2, ..., e_m}) c_e\
 $
 Since the capacity of the cut is defined as the total capacity of the edges crossing the cut, it is equal to the cost of the solution by definition.
 #align(right, $qed$)
@@ -145,6 +145,8 @@ FOR i=1:n
 
 FOR i=1:n
   C[i, i] = p[i]  // cost of a single node is its probability
+  C[i, i-1] = 0
+  C[i+1, i] = 0
   R[i, i] = i // root of a single-node tree is the node itself
 
 FOR length=2:n    // we order based on the length of the subtree
@@ -287,7 +289,7 @@ pairs = []
 FOR i=1:n
   add(pairs, (a[i], i)) // store the score and index as a pair
 
-quickssort pairs by first element in descending order// sort by score
+quicksort pairs by first element in descending order// sort by score
 ordering = []
 FOR i=1:n
   add(ordering, pairs[i][2]) // extract the indices from the sorted pairs
@@ -327,10 +329,10 @@ Therefore, we have shown that the greedy algorithm produces an ordering that is 
 
 
 == Runtime
-Creating the pairs array takes $O(n)$ time, since we iterate over all vertices and create a pair for each vertex.
-Sorting the pairs array takes $O(n log n)$ time, since that is the runtime of quicksort.
-Extracting the indices from the sorted pairs array takes $O(n)$ time, since we iterate over all pairs and extract the second element.
-Therefore, the overall time complexity of the algorithm is $O(n log n)$.
+Creating the pairs array takes $O(|V|)$ time, since we iterate over all vertices and create a pair for each vertex.
+Sorting the pairs array takes $O(|V| log |V|)$ time, since that is the runtime of quicksort.
+Extracting the indices from the sorted pairs array takes $O(|V|)$ time, since we iterate over all pairs and extract the second element.
+Therefore, the overall time complexity of the algorithm is $O(|V| log |V|)$.
 
 *(warmup)*
 We employ a greedy algorithm to solve this problem.
