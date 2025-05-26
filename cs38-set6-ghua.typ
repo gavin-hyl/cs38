@@ -296,9 +296,34 @@ return ordering
 ```
 
 == Correctness
+We first lay some groundwork for our proof.
+
+Firstly, every solution can be expressed as an ordering of *all* vertices in the graph.
+This is because all scores are nonnegative, so selecting another vertex to visit will not decrease the score.
+If a solution does not visit all vertices, we can simply add the remaining vertices to the end of the ordering, and the score will not decrease.
+
+The total value extracted from the graph can be expressed in terms of the edges in the graph, since value is only added when both vertices of an edge are visited.
+Let $e_(i j)$ be the edge between vertices $i$ and $j$.
+The value extracted from this edge is $a[i]$ if $i$ is visited before $j$, and $a[j]$ if $j$ is visited before $i$.
+The total value extracted from the graph is then the sum of values extracted from all edges, since in this formulation, each edge is counted exactly once, and the value corresponding to the edge is equivalent to the definition given in the problem.
+
 This is a greedy algorithm.
 As such, we will prove that it is correct by an exchange argument.
-Consider an partial arbitrary optimal ordering of the vertices, which we will denote as $o_1, o_2, ..., o_m$, with $m < n$.
+Consider an arbitrary optimal ordering of the vertices, $o_1, o_2, ..., o_n$.
+If the vertices are ordered in decreasing order of their scores, then it coincides with the ordering produced by our algorithm since all vertices have distinct scores.
+If not, then there exists some $i$ such that $a[o_i] < a[o_(i+1)]$.
+We will show that we can exchange $o_i$ and $o_(i+1)$ to create a new ordering that has the same score.
+Assume, to the contrary, that $o_i, o_(i+1)$ are connected.
+Then, the value from the edge is $a[o_i]$, since it is visited before $o_(i+1)$.
+If we exchange $o_i$ and $o_(i+1)$, then the value from the edge becomes $a[o_(i+1)]$, which is greater than $a[o_i]$.
+Moreover, since $o_i, o_(i+1)$ are adjacent in the ordering, this exchange does not affect the values from any other edges, since the ordering of $o_i, o_(i+1)$ relative to all other vertices remain the same. 
+Therefore, we have constructed a new ordering that has a greater score than the original ordering, which contradicts the assumption that the original ordering was optimal.
+Therefore, there is no edge between $o_i$ and $o_(i+1)$, so we can exchange them without affecting the score (since the remaining relative ordering of the vertices remains the same).
+Therefore, for any two vertices $o_i, o_(i+1)$ that are not ordered in decreasing order of their scores, we can exchange them to create a new ordering that has the same score.
+We can use the bubble sort algorithm to repeatedly exchange adjacent vertices until all vertices are ordered in decreasing order of their scores, without changing the total score. 
+Each element must be exchanged at most $O(n)$ times, from the end of the ordering to the front. 
+Since there are $n$ elements in total, the total number of exchanges is $O(n^2)$, which is finite.
+Therefore, we have shown that the greedy algorithm produces an ordering that is optimal, since it is equivalent to the ordering produced by repeatedly exchanging adjacent vertices in the optimal solution until all vertices are ordered in decreasing order of their scores.
 
 
 == Runtime
