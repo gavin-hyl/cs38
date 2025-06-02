@@ -74,3 +74,14 @@ $
   B(x) = (x + a[1]) (x + a[2]) dots.c (x + a[n])
 $
 We check the two conditions.
+$
+  B(-a[i]) &= (-a[i] + a[1]) (-a[i] + a[2]) dots.c (-a[i] + a[i]) dots.c (-a[i] + a[n]) = 0 space forall i\
+  B(0) &= (0 + a[1]) (0 + a[2]) dots.c (0 + a[n]) = a[1] a[2] dots.c a[n] = product_(i=1)^n a[i]
+$
+Therefore, to extract the coefficients of $B(x)$, we simply need to expand the product.
+
+== Algorithm
+
+== Correctness
+
+== Complexity
