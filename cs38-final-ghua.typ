@@ -144,3 +144,85 @@ We may evoke the result from PS1, Q1, part (b) to solve this recurrence relation
 $
   T(n) = O(n log^2 n)
 $
+
+
+=
+== Algorithm
+We employ a greedy algorithm to solve the problem.
+We note that since each train costs a constant amount of money, minimizing cost is equivalent to minimizing the number of trains taken.
+```
+=====
+ROUTE
+-----
+// Input: n, the number of cities; (c_t, d_t) for 1 <= t <= m, describing trains.
+// Output: trains, a sequence of trains represented by a list of integers, where trains[i] is the i'th train taken.
+
+current = 1   // we start at city 1
+trains = []   // list of trains taken
+WHILE current < n       // greedy scan
+  best = -1             // best train to take
+  best_destination = -1 // furthest city we can reach with the best train
+  FOR t = 1:m           // iterate through all trains to find the best one
+    IF (c_t <= current <= d_t) AND (d_t > best_destination) // train is better
+      best = t                // update best train
+      best_destination = d_t  // update best city we can reach with the best train
+  IF best == -1         // no train can be taken, return None
+    RETURN None 
+  append best to trains // take the best train
+  current = best_destination // update current city
+RETURN trains
+```
+
+== Correctness
+We first show that the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
+
+- Backwards direction:
+  Let the first city that is covered by no trains be $c$.
+  This is the city that made the algorithm return None.
+  Assume, to the contrary, that there exists a sequence of trains that can take us to city $n$.
+  Since the passenger must progress one city at a time, they must pass through city $c$ on some train.
+  However, since the algorithm returns None, it must be the case that there is no train that can take the passenger from city $c$ to city $c + 1$, which contradicts the assumption that there exists a sequence of trains that can take us to city $n$.
+
+- Forward direction:
+  We show the contrapositive: if there is a sequence of trains that can take us to city $n$, then the algorithm does not return None.
+  Let $T = (t_1, t_2, dots, t_k)$ be a sequence of trains that can take us to city $n$.
+  By the previous argument, for every city, there must be a train that can take the passenger from that city to the next city.
+  Assume, to the contrary, that the algorithm returns None.
+  Then, there must be a city $c$ such that there is no train that can take the passenger from city $c$ to city $c + 1$.
+  However, this contradicts the assumption that there exists a sequence of trains that can take us to city $n$, since the passenger must pass through city $c$ on some train.
+
+Therefore, the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
+We now turn our attention to the optimality of the sequence.
+
+Since this is a greedy algorithm, we use an exchange argument to show that it is correct.
+Suppose we have a sequence of trains $T$ that is optimal, we will show that it can be iteratively transformed into the sequence of trains returned by the algorithm.
+Let $T = (t_1, t_2, dots.c, t_k)$ be the sequence of trains.
+Moreover, denote the optimal destination of train $t_i$ as $d_i^* in [c_i, d_i]$.
+Each $d_i^*$ must also be the start of the next train in the sequence (if $d_i^* != n$).
+
+Suppose that $t_i^* in T$ is the first train in the sequence that does not satisfy the greedy condition.
+That is, either $d_i^* < d_i$ (we do not take the train to its ending city), or exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ and $d_j > d_i^*$ (there exists a train that can take us further than $t_i^*$).
+We consider the two cases separately.
+
+=== $d_i^* < d_i$.
+
+
+
+By definition, 
+
+We will show that we can replace $t_i^*$ with $t_i$ and still reach the same destination.
+
+
+
+Since trains must increment the passenger's city number, when we consider a pair of consecutive trains $t_i, t_(i+1)$, it must be the case that $c_i < d_i^* < d_(i+1)^*$.
+There are now two cases:
+- $d_(i+1)^* <= d_i$: in this case, since $d_(i+1)^* > c_i$ we have $d_(i+1)^* in [c_1, d_i]$, we can replace $t_(i+1)$ with $t_i$ and still reach the same destination, since $d_(i+1)^*$ is reachable by train $t_i$.
+  Everything else can remain unchanged.
+  Therefore, we can remove $t_(i+1)$ from the sequence and create a shorter one, which contradicts the assumption that $T$ is optimal.
+- $d_(i+1)^* > d_i$. There are two subcases.
+  - $d_i^* = d_i$: in this case, train $t_i$ satisfies the greedy condition, since we have taken it to its ending city.
+  - $d_i^* < d_i$: in this case, we have $d_i^* < d_i < d_(i+1)^*$.
+    Since we are able to board train $t_(i+1)$, it must be that $c_(i+1) <= d_i^*$.
+    Therefore, $d_i in [c_(i+1), d_(i+1)]$.
+    Therefore, an equivalent feasible sequence is taking train $t_i$ to its ending city, and then taking train $t_(i+1)$.
+    This coincides with the gree
