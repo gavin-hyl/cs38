@@ -147,27 +147,39 @@ $
 == Algorithm
 We employ a greedy algorithm to solve the problem.
 We note that since each train costs a constant amount of money, minimizing cost is equivalent to minimizing the number of trains taken.
+Essentially, at every city, we want to take the train that takes us to the furthest city possible.
 ```
 =====
 ROUTE
 -----
 // Input: n, the number of cities; (c_t, d_t) for 1 <= t <= m, describing trains.
-// Output: trains, a sequence of trains represented by a list of integers, where trains[i] is the i'th train taken.
+// Output: T, a sequence of trains represented by a list of integers, where T[i] is the i'th train taken.
 
+trains = [(t, c_t, d_t) for t in 1:m]
+sort trains by c_t  // sort by starting city
+t = 1         // index into the *SORTED* list of trains
 current = 1   // we start at city 1
-trains = []   // list of trains taken
+T = []        // list of trains taken
+
 WHILE current < n       // greedy scan
-  best = -1             // best train to take
-  best_destination = -1 // furthest city we can reach with the best train
-  FOR t = 1:m           // iterate through all trains to find the best one
-    IF (c_t <= current <= d_t) AND (d_t > best_destination) // train is better
-      best = t                // update best train
-      best_destination = d_t  // update best city we can reach with the best train
-  IF best = -1         // no train can be taken, return None
-    RETURN None 
-  append best to trains // take the best train
-  current = best_destination // update current city
-RETURN trains
+  best_t = None // index of the best train to take
+  best_d = -1 // the furthest city we can reach with the best train
+
+  // iterate through all trains we can board
+  WHILE (t <= m) AND (trains[t].c <= current)
+    IF (trains[t].d > best_d)
+      best_t = t            // we should board this train
+      best_d = trains[t].d  // update the furthest city we can reach
+    t = t + 1
+  
+  IF best_t is None // no train can take us to the next city
+    RETURN None // we cannot reach city n, return None
+
+  // take the best train (best_t is not the index of the original train
+  // but the index in the sorted list)
+  T.append(trains[best_t].t)
+  current = best_d // update the current city to the furthest city we can reach
+RETURN T
 ```
 
 == Correctness
@@ -189,7 +201,20 @@ We first show that the algorithm correctly returns None iff no sequence of train
   However, this contradicts the assumption that there exists a sequence of trains that can take us to city $n$, since the passenger must pass through city $c$ on some train.
 
 Therefore, the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
-We now turn our attention to the optimality of the sequence.
+
+We also show that the inner `WHILE` loop correctly finds the train that takes the passenger to the furthest city possible.
+We use induction on the number of executions of the outer `WHILE` loop.
+- Base case: the outer loop has not been executed once yet.
+  In this case, the inner loop iterates through all trains that can be boarded from city 1, and finds the train that takes the passenger to the furthest city possible.
+- Inductive step: assume the inner loop correctly finds the train that takes the passenger to the furthest city possible after $k$ executions of the outer loop.
+  We now show that it correctly finds the train that takes the passenger to the furthest city possible after $k + 1$ executions of the outer loop.
+  Let the initial value of `t` be $t_0$.
+  We note that all trains before $t_0$ have their starting city smaller than the previous `current` city, which must be smaller than the current city, so they cannot be boarded.
+  Therefore, they can be safely ignored.
+  The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible.
+
+We now show that the sequence of trains returned by the algorithm is optimal.
+
 
 Since this is a greedy algorithm, we use an exchange argument to show that it is correct.
 Suppose we have a sequence of trains $T$ that is optimal, we will show that it can be iteratively transformed into the sequence of trains returned by the algorithm.
@@ -219,6 +244,15 @@ Therefore, we can iteratively transform the sequence of trains $T$ into the sequ
 
 
 == Complexity
-Since the variable `current` must be incremented by at least $1$ at each iteration, the algorithm must terminate after at most $O(n)$ iterations.
-In each iteration, we iterate through all $m$ trains to find the best one, which takes $O(m)$ time.
-Therefore, the total time complexity of the algorithm is $O(n m)$.
+The algorithm first sorts the list of trains by their starting city, which takes $O(m log m)$ time.
+The operations in the outer `WHILE` loop are all constant time operations, and they are run at most $m$ times (since $t$ is incremented every time the inner loop is run, which is guaranteed to happen at least once per outer loop). This is $O(m)$.
+The operations in the inner `WHILE` loop are also constant time operations, and they are run at most $m$ times, which is $O(m)$.
+Therefore, the overall time complexity of the algorithm is 
+$
+  O(m log m + m + m) = O(m log m)
+$
+
+
+
+
+= // 4
