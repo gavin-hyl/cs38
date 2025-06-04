@@ -95,10 +95,10 @@ COEFFICIENTS
 // Output: C, the coefficients of the polynomial formed by multiplying the terms in T.
 
 IF N == 1
-  RETURN T[0] // Base case, return the only term
+  RETURN T[1] // Base case, return the only term
 
-T1 = T[0:N/2] // First half of the terms
-T2 = T[N/2+1:N] // Second half of the terms
+T1 = T[1:N/2] // First half of the terms, inclusive on both ends
+T2 = T[N/2+1:N] // Second half of the terms, inclusive on both ends
 C1 = COEFFICIENTS(T1) // Recursively compute coefficients for the first half
 C2 = COEFFICIENTS(T2) // Recursively compute coefficients for the second half
 C is the vector of coefficients of the polynomial formed by multiplying the polynomials represented by C1 and C2 using the FFT, as described in class.
@@ -128,19 +128,45 @@ Assume, to the contrary, that $2^k > 2n$.
 Then, we have $2^(k-1) > n$, so we can find a $k' = k-1 < k$ such that $2^k' >= n$, which contradicts the definition of $k$ as the smallest integer such that $2^k >= n$.
 Therefore, the total number of terms in $A(x)$ is at most $2n$.
 Creating the list of vectors representing the coefficients of the terms in $A(x)$ takes $O(n)$ time, since there are at most $2n$ terms and each term takes a constant time to construct.
+
 We now consider the recurrence relation of the rest of the algorithm.
-Let the time complexity of the algorithm be $T(n)$.
-The algorithm splits the problem into two subproblems of size $n/2$, which takes $O(n)$ time each.
-Moreover, the time complexity of multiplying two polynomials of degree $n/2$ using the FFT is $O(n/2 log(n/2)) = O(n log n)$, which dominates the time complexity of each layer.
+Let the time complexity of the algorithm be $T(N)$, where $N$ is the number of terms in $A(x)$, a power of $2$.
+The algorithm splits the problem into two subproblems of size $N/2$, which takes $O(N)$ time.
+Moreover, the time complexity of multiplying two polynomials of degree $N/2$ using the FFT is $O(N/2 log(N/2)) = O(N log N)$, which dominates the time complexity of each layer.
 Therefore, we have the recurrence relation:
 $
-  T(n) = 2 T(n/2) + n log n
+  T(N) = 2 T(N/2) + O(N log N)
 $
-We may evoke the result from PS1, Q1, part (b) to solve this recurrence relation.
+#table(
+  columns: (auto, auto, auto, auto),
+  inset: 10pt,
+  align: horizon,
+  table.header(
+    [*Layer*], [*\# problems*], [*Problem Length*], [*Work Done*],
+  ),
+  $ 0 $, $ 1 $, $ N $, $ O(N log(N)) $,
+  $ 1 $, $ 2 $, $ N/2 $, $ 2 dot O(N/2 log(N/2))  $,
+  $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
+  $ L $, $ 2^L $, $ N/(2^L) $, $ 2^L dot O(N/2^L log(N/(2^L))) $,
+  $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
+  $ log_2(N) $, $ N $, $ 1 $, $ O(N) $
+)
+Therefore, the total work done is:
 $
-  T(n) = O(n log^2 n)
+  T(N) &= O(N log N) + O(N log(N/2)) + O(N log(N/4)) + dots.c + O(N) \
+  &= sum_(i=0)^(log_2(N)) O(N log(N/2^i)) \
+  &= O(N) sum_(i=0)^(log_2(N)) log(N/2^i) \
+  &= O(N) sum_(i=0)^(log_2(N)) (log N - i log 2) \
+  &= O(N) (log N dot log_2(N) - log(2) (log_2(N) dot (log_2(N) + 1))/2) \
+  &= O(N log^2 N) \
+  &= O(n log^2 n)
 $
+The last step follows from the fact that $N <= 2n$.
 
+Therefore, the overall time complexity of the algorithm is 
+$
+  O(n log^2 n) + O(n) = O(n log^2 n)
+$
 
 
 = // 3
@@ -156,7 +182,7 @@ ROUTE
 // Output: T, a sequence of trains represented by a list of integers, where T[i] is the i'th train taken.
 
 trains = [(t, c_t, d_t) for t in 1:m]
-sort trains by c_t  // sort by starting city
+sort trains by c_t, break ties randomly  // sort by starting city
 t = 1         // index into the *SORTED* list of trains
 current = 1   // we start at city 1
 T = []        // list of trains taken
@@ -180,16 +206,17 @@ WHILE current < n       // greedy scan
   T.append(trains[best_t].t)
   current = best_d // update the current city to the furthest city we can reach
 RETURN T
+=====
 ```
 
 == Correctness
 We first show that the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
 
 - Backwards direction:
-  Let the first city that is covered by no trains be $c$.
+  Let the first city that is covered by no trains be $c$, i.e., $c$ is the first city such that there is no train that can take the passenger from city $c$ to city $d$ which $d>c$.
   This is the city that made the algorithm return None.
   Assume, to the contrary, that there exists a sequence of trains that can take us to city $n$.
-  Since the passenger must progress one city at a time, they must pass through city $c$ on some train.
+  Since trains stop at every city, the passenger must pass through city $c$ and reach city $c+1$ on some train.
   However, since the algorithm returns None, it must be the case that there is no train that can take the passenger from city $c$ to city $c + 1$, which contradicts the assumption that there exists a sequence of trains that can take us to city $n$.
 
 - Forward direction:
@@ -209,7 +236,8 @@ We use induction on the number of executions of the outer `WHILE` loop.
 - Inductive step: assume the inner loop correctly finds the train that takes the passenger to the furthest city possible after $k$ executions of the outer loop.
   We now show that it correctly finds the train that takes the passenger to the furthest city possible after $k + 1$ executions of the outer loop.
   Let the initial value of `t` be $t_0$.
-  We note that all trains before $t_0$ have their starting city smaller than the previous `current` city, which must be smaller than the current city, so they cannot be boarded.
+  By the inductive hypothesis, every train before $t_0$ has been checked, and the train that takes the passenger to the furthest city possible has been found.
+  Therefore, every train before $t_0$ cannot be boarded from the current city (as the current city is greater than or equal to the destinations of the trains before $t_0$).
   Therefore, they can be safely ignored.
   The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible.
 
@@ -237,15 +265,19 @@ Therefore, the only possible case is $d_(i+1)^* > d_i$, and we can take train $t
 
 === There exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ and $d_j > d_i^*$
 In this case, we can take train $t_j$ instead of train $t_i$, and set $d_j^* = d_i^*$.
+This does not change the cost of the sequence since the number of trains taken is the same.
 This is possible because $d_i^* = d_j^* < d_j$.
 We may then invoke the previous case to show that we can take train $t_j$ to its ending city given that $T$ is optimal.
 
-Therefore, we can iteratively transform the sequence of trains $T$ into the sequence returned by the algorithm, which is optimal.
+Therefore, by iterating through the trains from start to finish, we can transform the optimal sequence of trains $T$ into the sequence returned by the algorithm without changing the cost.
+Therefore, the sequence of trains returned by the algorithm is optimal.
 
 
 == Complexity
 The algorithm first sorts the list of trains by their starting city, which takes $O(m log m)$ time.
-The operations in the outer `WHILE` loop are all constant time operations, and they are run at most $m$ times (since $t$ is incremented every time the inner loop is run, which is guaranteed to happen at least once per outer loop). This is $O(m)$.
+The outer `WHILE` loop iterates at most $m$ times, since there are at most $m$ trains, and each time the outer loop is executed, one train is boarded ($t$ incremented at least once).
+Otherwise, the algorithm returns None, which is of lower complexity.
+Therefore, the outer `WHILE` loop's instructions (excluding the inner loop) run at most $m$ times, which is $O(m)$.
 The operations in the inner `WHILE` loop are also constant time operations, and they are run at most $m$ times, which is $O(m)$.
 Therefore, the overall time complexity of the algorithm is 
 $
@@ -256,3 +288,69 @@ $
 
 
 = // 4
+== Algorithm
+We use dynamic programming to solve the problem.
+The subproblems are defined as $V[i, j]$, the maximum number of pairings that can be formed with the substring $b[i..j]$.
+```
+========
+PAIRINGS
+--------
+// Input: b[1..n], a string of length n where b[i] is in {A, B, C, D}
+// Output: P, a list of pairs of indices representing the maximum cardinality pairings.
+
+V = n by n matrix of 0s representing the values of subproblems
+// choices (whether or not to pair the first character, if so, which one) for each subproblems
+CHOICES = n by n matrix of None 
+
+FOR length=2:n            // fill in the subproblems in order of increasing length
+  FOR i=1:n-length+1      // i is the starting index of the substring (inclusive)
+    j = i + length-1      // j is the ending index of the substring (inclusive)
+    V[i, j] = V[i+1, j]   // case 1: do not pair the first character
+    CHOICES[i, j] = None  // do not pair
+
+    FOR k=i+1:j           // iterate through all characters after the first character
+      IF (b[i], b[k]) is a valid pair
+        value = V[i+1, k-1] + 1 + V[k+1, j] // two subproblems, +1 for the new pair
+        IF value > V[i, j]
+          V[i, j] = value   // update the value of the subproblem
+          CHOICES[i, j] = k // store the choice of pairing
+
+RETURN BACKTRACK(CHOICES, 1, n) // backtrack to find the pairs
+========
+
+
+
+=========
+BACKTRACK
+---------
+// Input: CHOICES, a matrix of choices for each subproblem, and (i, j), the subproblem to backtrack
+// Output: P, the list of pairs for the subproblem (i, j)
+P = []
+IF i >= j
+  RETURN P // base case, no characters to pair
+IF CHOICES[i, j] is None
+  RETURN BACKTRACK(CHOICES, i+1, j) // do not pair the first character
+k = CHOICES[i, j] // the index of the character paired with b[i]
+append (i, k) to P // add the pair to the list
+extend P with BACKTRACK(CHOICES, i+1, k-1) // backtrack the first subproblem
+extend P with BACKTRACK(CHOICES, k+1, j) // backtrack the second subproblem
+RETURN P
+=========
+```
+
+== Correctness
+We first show the dynamic programming algorithm is correct by consider the subproblems, ordering, and initialization.
+- Subproblems: the subproblems are defined as $V[i, j]$, the maximum number of pairings that can be formed with the substring $b[i..j]$.
+  At each subproblem, we can either choose to pair the first character with another character, or not pair.
+
+We then show that the given a correct matrix of choices, the backtracking algorithm correctly returns the pairs.
+We use induction on the length of the substring $b[i..j]$.
+- Base case: the length of the substring $<= 1$.
+  In this case, there are no characters to pair, so the algorithm returns an empty list, which is correct.
+- Inductive step: assume the algorithm works for substrings of length $<= k$.
+  We now show that it works for substrings of length $k + 1$.
+  The algorithm first checks if the first character is paired with any other character.
+  If it is not, then the algorithm simply backtracks the substring $b[i+1..j]$, which is correct by the inductive hypothesis.
+  Otherwise, the algorithm finds the index of the character paired with the first character, and adds the pair to the list.
+  It then backtracks the two substrings $b[i+1..k-1]$ and $b[k+1..j]$, which are both of length $<= k$, and therefore correct by the inductive hypothesis.
+  Therefore, the algorithm correctly returns the pairs for any substring $b[i..j]$.
