@@ -316,26 +316,26 @@ FOR length=2:n            // fill in the subproblems in order of increasing leng
           V[i, j] = value   // update the value of the subproblem
           CHOICES[i, j] = k // store the choice of pairing
 
-RETURN BACKTRACK(CHOICES, 1, n) // backtrack to find the pairs
+P = [] // list of pairs to be returned
+BACKTRACK(CHOICES, 1, n) // backtrack to find the pairs and add them to P
+RETURN P
 ========
-
 
 
 =========
 BACKTRACK
 ---------
 // Input: CHOICES, a matrix of choices for each subproblem, and (i, j), the subproblem to backtrack
-// Output: P, the list of pairs for the subproblem (i, j)
-P = []
-IF i >= j
-  RETURN P // base case, no characters to pair
+// Output: added pairs to P, a global variable of list of pairs
+IF i < 1 OR j > n OR i >= j
+  RETURN      // out of bounds, do nothing
 IF CHOICES[i, j] is None
-  RETURN BACKTRACK(CHOICES, i+1, j) // do not pair the first character
+  BACKTRACK(CHOICES, i+1, j) // do not pair the first character
+  RETURN
 k = CHOICES[i, j] // the index of the character paired with b[i]
 append (i, k) to P // add the pair to the list
-extend P with BACKTRACK(CHOICES, i+1, k-1) // backtrack the first subproblem
-extend P with BACKTRACK(CHOICES, k+1, j) // backtrack the second subproblem
-RETURN P
+BACKTRACK(CHOICES, i+1, k-1) // backtrack the first subproblem
+BACKTRACK(CHOICES, k+1, j) // backtrack the second subproblem
 =========
 ```
 
@@ -387,7 +387,7 @@ The algorithm first initializes the matrix $V$ and `CHOICES`, which takes $O(n^2
 The outer loop iterates for $O(n)$ times, the inner $i$ loop iterates for $O(n)$ times, which corresponds to the fact that there are $O(n^2)$ subproblems.
 For each subproblem, the inner $k$ loop iterates for $O(n)$ times, since it iterates through all characters in the substring $b[i..j]$.
 Therefore, the total time complexity to fill in the $V$ and `CHOICES` matrices is $O(n^3)$.
-The backtracking algorithm runs in $O(n^2)$ time, since there are at most $O(n^2)$ subproblems to visit. ($P$ can be implemented as a global variable, and does not need be passed around).
+The backtracking algorithm runs in $O(n^2)$ time, since there are at most $O(n^2)$ subproblems to visit.
 Therefore, the overall time complexity of the algorithm is
 $
   O(n^3 + n) = O(n^3)
