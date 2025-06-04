@@ -152,40 +152,26 @@ We note that since each train costs a constant amount of money, minimizing cost 
 ROUTE
 -----
 // Input: n, the number of cities; (c_t, d_t) for 1 <= t <= m, describing trains.
-// Output: T, a sequence of trains represented by a list of integers, where T[i] is the i'th train taken.
-
-
-// stores the furthest destination for each starting city
-destinations = array of size n, initialized to -inf
-trains = array of size m, initialized to None
-
-// Iterate through all trains to find the furthest destination
-// for each starting city, and the corresponding trains.
-FOR t = 1:m   // iterate through all trains
-  IF destinations[c_t] is None
-    destinations[c_t] = d_t    // the first train to start at city c_t
-    trains[c_t] = t
-  ELSE IF d_t > destinations[c_t]
-    destinations[c_t] = d_t    // keep the furthest destination for each starting city
-    trains[c_t] = t             // update the train for this starting city
+// Output: trains, a sequence of trains represented by a list of integers, where trains[i] is the i'th train taken.
 
 current = 1   // we start at city 1
-T = []        // list of trains taken
-WHILE current < n               // greedy scan
-  append trains[current] to T   // take the train that starts at current city
-  IF destinations[current] is None
-    RETURN None           // no train can take us from current city to the next city
-  current = destinations[current]   // update to the destination of the train taken
-RETURN T
-=====
+trains = []   // list of trains taken
+WHILE current < n       // greedy scan
+  best = -1             // best train to take
+  best_destination = -1 // furthest city we can reach with the best train
+  FOR t = 1:m           // iterate through all trains to find the best one
+    IF (c_t <= current <= d_t) AND (d_t > best_destination) // train is better
+      best = t                // update best train
+      best_destination = d_t  // update best city we can reach with the best train
+  IF best = -1         // no train can be taken, return None
+    RETURN None 
+  append best to trains // take the best train
+  current = best_destination // update current city
+RETURN trains
 ```
 
 == Correctness
-The correctness of the first `FOR` loop is straightforward.
-For every train, we check whether it improves the furthest destination for the starting city of that train.
-We store the train that achieves the furthest destination for each starting city.
-
-We then show that the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
+We first show that the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
 
 - Backwards direction:
   Let the first city that is covered by no trains be $c$.
