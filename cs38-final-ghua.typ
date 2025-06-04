@@ -41,10 +41,6 @@ $
   & mat(1, -2, 0; 0, 3, -2) x <= vec(2, 1) \
   & x >= 0
 $
-Let
-$
-  c^top = (1, 0, -3), A = mat(1, -2, 0; 0, 3, -2), b = vec(2, 1)
-$
 The dual linear program is given by:
 $
   & min y^top vec(2, 1) \
@@ -61,10 +57,10 @@ We now compute the value of the objective function at $y$:
 $
   y^top vec(2, 1) = 1 dot 2 + 2/3 dot 1 = 2 + 2/3 = 8/3
 $
-By the weak duality theorem, we know that the value of the objective function at any feasible solution to the dual linear program is an upper bound on the value of the objective function at any feasible solution to the primal linear program. // FIXME
+By the weak duality theorem, we know that the value of the objective function at any feasible solution to the dual linear program is an upper bound on the value of the objective function at any feasible solution to the primal linear program.
 Since we have found a feasible solution to the dual linear program with objective value $8/3$, we know that the value of the objective function at any feasible solution to the primal linear program is at most $8/3$.
 
-Since the original solution has the objective value $8/3$, it is optimal.
+Since the given solution to the primal LP has the objective value $8/3$, it is optimal.
 #align(right, $qed$)
 
 =
@@ -146,7 +142,8 @@ $
 $
 
 
-=
+
+= // 3
 == Algorithm
 We employ a greedy algorithm to solve the problem.
 We note that since each train costs a constant amount of money, minimizing cost is equivalent to minimizing the number of trains taken.
@@ -155,26 +152,40 @@ We note that since each train costs a constant amount of money, minimizing cost 
 ROUTE
 -----
 // Input: n, the number of cities; (c_t, d_t) for 1 <= t <= m, describing trains.
-// Output: trains, a sequence of trains represented by a list of integers, where trains[i] is the i'th train taken.
+// Output: T, a sequence of trains represented by a list of integers, where T[i] is the i'th train taken.
+
+
+// stores the furthest destination for each starting city
+destinations = array of size n, initialized to -inf
+trains = array of size m, initialized to None
+
+// Iterate through all trains to find the furthest destination
+// for each starting city, and the corresponding trains.
+FOR t = 1:m   // iterate through all trains
+  IF destinations[c_t] is None
+    destinations[c_t] = d_t    // the first train to start at city c_t
+    trains[c_t] = t
+  ELSE IF d_t > destinations[c_t]
+    destinations[c_t] = d_t    // keep the furthest destination for each starting city
+    trains[c_t] = t             // update the train for this starting city
 
 current = 1   // we start at city 1
-trains = []   // list of trains taken
-WHILE current < n       // greedy scan
-  best = -1             // best train to take
-  best_destination = -1 // furthest city we can reach with the best train
-  FOR t = 1:m           // iterate through all trains to find the best one
-    IF (c_t <= current <= d_t) AND (d_t > best_destination) // train is better
-      best = t                // update best train
-      best_destination = d_t  // update best city we can reach with the best train
-  IF best == -1         // no train can be taken, return None
-    RETURN None 
-  append best to trains // take the best train
-  current = best_destination // update current city
-RETURN trains
+T = []        // list of trains taken
+WHILE current < n               // greedy scan
+  append trains[current] to T   // take the train that starts at current city
+  IF destinations[current] is None
+    RETURN None           // no train can take us from current city to the next city
+  current = destinations[current]   // update to the destination of the train taken
+RETURN T
+=====
 ```
 
 == Correctness
-We first show that the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
+The correctness of the first `FOR` loop is straightforward.
+For every train, we check whether it improves the furthest destination for the starting city of that train.
+We store the train that achieves the furthest destination for each starting city.
+
+We then show that the algorithm correctly returns None iff no sequence of trains can take us to city $n$.
 
 - Backwards direction:
   Let the first city that is covered by no trains be $c$.
@@ -200,29 +211,28 @@ Let $T = (t_1, t_2, dots.c, t_k)$ be the sequence of trains.
 Moreover, denote the optimal destination of train $t_i$ as $d_i^* in [c_i, d_i]$.
 Each $d_i^*$ must also be the start of the next train in the sequence (if $d_i^* != n$).
 
-Suppose that $t_i^* in T$ is the first train in the sequence that does not satisfy the greedy condition.
-That is, either $d_i^* < d_i$ (we do not take the train to its ending city), or exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ and $d_j > d_i^*$ (there exists a train that can take us further than $t_i^*$).
+Suppose that $t_i in T$ is the first train in the sequence that does not satisfy the greedy condition.
+That is, either $d_i^* < d_i$ (we do not take the train to its ending city), or exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ (we can board $t_j$) and $d_j > d_i^*$ (it takes us further than $t_i$).
 We consider the two cases separately.
 
-=== $d_i^* < d_i$.
+=== $d_i^* < d_i$
+Consider the next train $t_(i+1)$ in the sequence, with $d_(i+1)^* > d_i^*$.
+If $d_(i+1)^* > d_i$, then we can take train $t_i$ to its ending city, and then take train $t_(i+1)$ to $d_(i+1)^*$.
+This is possible since $c_(i+1) <= d_i^* < d_i < d_(i+1)^* <= d_(i+1)$ (the first inequality is true since we can board train $t_(i+1)$ at city $d_i^*$).
+This makes the sequence conform to the greedy condition.
+Otherwise, if $d_(i+1)^* <= d_i$, then we can take train $t_i$ to $d_(i+1)^*$ directly, thus skipping train $t_(i+1)$, which contradicts the assumption that $T$ is optimal, since we have created a shorter sequence.
+
+Therefore, the only possible case is $d_(i+1)^* > d_i$, and we can take train $t_i$ to its ending city without changing the cost, which satisfies the greedy condition.
+
+=== There exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ and $d_j > d_i^*$
+In this case, we can take train $t_j$ instead of train $t_i$, and set $d_j^* = d_i^*$.
+This is possible because $d_i^* = d_j^* < d_j$.
+We may then invoke the previous case to show that we can take train $t_j$ to its ending city given that $T$ is optimal.
+
+Therefore, we can iteratively transform the sequence of trains $T$ into the sequence returned by the algorithm, which is optimal.
 
 
-
-By definition, 
-
-We will show that we can replace $t_i^*$ with $t_i$ and still reach the same destination.
-
-
-
-Since trains must increment the passenger's city number, when we consider a pair of consecutive trains $t_i, t_(i+1)$, it must be the case that $c_i < d_i^* < d_(i+1)^*$.
-There are now two cases:
-- $d_(i+1)^* <= d_i$: in this case, since $d_(i+1)^* > c_i$ we have $d_(i+1)^* in [c_1, d_i]$, we can replace $t_(i+1)$ with $t_i$ and still reach the same destination, since $d_(i+1)^*$ is reachable by train $t_i$.
-  Everything else can remain unchanged.
-  Therefore, we can remove $t_(i+1)$ from the sequence and create a shorter one, which contradicts the assumption that $T$ is optimal.
-- $d_(i+1)^* > d_i$. There are two subcases.
-  - $d_i^* = d_i$: in this case, train $t_i$ satisfies the greedy condition, since we have taken it to its ending city.
-  - $d_i^* < d_i$: in this case, we have $d_i^* < d_i < d_(i+1)^*$.
-    Since we are able to board train $t_(i+1)$, it must be that $c_(i+1) <= d_i^*$.
-    Therefore, $d_i in [c_(i+1), d_(i+1)]$.
-    Therefore, an equivalent feasible sequence is taking train $t_i$ to its ending city, and then taking train $t_(i+1)$.
-    This coincides with the gree
+== Complexity
+Since the variable `current` must be incremented by at least $1$ at each iteration, the algorithm must terminate after at most $O(n)$ iterations.
+In each iteration, we iterate through all $m$ trains to find the best one, which takes $O(m)$ time.
+Therefore, the total time complexity of the algorithm is $O(n m)$.
