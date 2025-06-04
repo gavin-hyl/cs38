@@ -308,9 +308,10 @@ FOR length=2:n            // fill in the subproblems in order of increasing leng
     V[i, j] = V[i+1, j]   // case 1: do not pair the first character
     CHOICES[i, j] = None  // do not pair
 
-    FOR k=i+1:j           // iterate through all characters after the first character
+    FOR k=i+1:j           // iterate through all characters to find the best pairing
       IF (b[i], b[k]) is a valid pair
-        value = V[i+1, k-1] + 1 + V[k+1, j] // two subproblems, +1 for the new pair
+        // two subproblems, +1 for the new pair, out of bounds indices give V=0
+        value = V[i+1, k-1] + 1 + V[k+1, j] 
         IF value > V[i, j]
           V[i, j] = value   // update the value of the subproblem
           CHOICES[i, j] = k // store the choice of pairing
@@ -342,6 +343,32 @@ RETURN P
 We first show the dynamic programming algorithm is correct by consider the subproblems, ordering, and initialization.
 - Subproblems: the subproblems are defined as $V[i, j]$, the maximum number of pairings that can be formed with the substring $b[i..j]$.
   At each subproblem, we can either choose to pair the first character with another character, or not pair.
+  If we choose not to pair the first character, then the maximum number of pairings that can be formed with the substring $b[i..j]$ is the same as the maximum number of pairings that can be formed with the substring $b[i+1..j]$, which is stored in $V[i+1, j]$, which is correct.
+  If we choose to pair the character, then it must be paired with some character $b[k]$ where $i < k <= j$.
+  We claim then the value (not necessarily optimal for arbitrary $k$) of the subproblem is given by
+  $
+    V[i+1, k-1] + 1 + V[k+1, j]
+  $
+  (out-of-bounds indices are treated as value $0$).
+  After a pair is found, the subproblem no longer contains either character used in the pairing, satisfying the first condition in the problem.
+  The `IF` statement ensures that the second condition is satisfied, since it only considers valid pairs.
+  We then show the subproblem structure ensures the third condition by showing the two solution sets are equal.
+  If a pairing $(a, b)$ is found in either of the two subproblems, it must be that the pairing is in $(i+1, k-1)$, which satisfies $i < a < b < k$, or in $(k+1, j)$, which satisfies disjointness of $[a, b]$ and $[i, k]$.
+  Moreover, assume, to the contrary, that there exists a pairing $(a, b)$ such that $a < k < b$, which our algorithm will miss.
+  However, this leads to a contradiction, since $[a, b] inter [i, k] != emptyset$ nor is one contained in the other, which violates the third condition.
+  Therefore, all possible pairings are considered, and the subproblem structure is correct.
+  This gives the recurrence relation:
+  $
+    V[i, j] = max(V[i+1, j], max_(i < k <= j) (V[i+1, k-1] + 1 + V[k+1, j]))
+  $
+- Ordering: we note that $V[i, j]$ only depends on $V[i+1, j]$, $V[i+1, k-1]$, and $V[k+1, j]$ for some $k$ such that $i < k <= j$.
+  All of the subproblems are shorter in length. 
+  Therefore, we can compute the values of the subproblems in order of increasing length of the substring $b[i..j]$, which is what the algorithm does.
+  This ensures that whenever a problem is computed, all problems of smaller length have already been computed, adn therefore the values of the subproblems are correct.
+- Initialization: we initialize the matrix $V$ to all $0$s.
+  Note that this is only for notational convenience, since the algorithm will only depend on $V[i, i]$ (length-$1$) substrings as it computes everything length-$2$ and above.
+  The length-$1$ substrings cannot have any pairings, so the initialization is correct.
+  The matrix `CHOICES` is initialized to all `None`, which is correct since we have not made any choices yet.
 
 We then show that the given a correct matrix of choices, the backtracking algorithm correctly returns the pairs.
 We use induction on the length of the substring $b[i..j]$.
@@ -354,3 +381,14 @@ We use induction on the length of the substring $b[i..j]$.
   Otherwise, the algorithm finds the index of the character paired with the first character, and adds the pair to the list.
   It then backtracks the two substrings $b[i+1..k-1]$ and $b[k+1..j]$, which are both of length $<= k$, and therefore correct by the inductive hypothesis.
   Therefore, the algorithm correctly returns the pairs for any substring $b[i..j]$.
+
+== Complexity
+The algorithm first initializes the matrix $V$ and `CHOICES`, which takes $O(n^2)$ time.
+The outer loop iterates for $O(n)$ times, the inner $i$ loop iterates for $O(n)$ times, which corresponds to the fact that there are $O(n^2)$ subproblems.
+For each subproblem, the inner $k$ loop iterates for $O(n)$ times, since it iterates through all characters in the substring $b[i..j]$.
+Therefore, the total time complexity to fill in the $V$ and `CHOICES` matrices is $O(n^3)$.
+The backtracking algorithm runs in $O(n^2)$ time, since there are at most $O(n^2)$ subproblems to visit. ($P$ can be implemented as a global variable, and does not need be passed around).
+Therefore, the overall time complexity of the algorithm is
+$
+  O(n^3 + n) = O(n^3)
+$
