@@ -74,6 +74,7 @@ $
   B(-a[i]) &= (-a[i] + a[1]) (-a[i] + a[2]) dots.c (-a[i] + a[i]) dots.c (-a[i] + a[n]) = 0 space forall i\
   B(0) &= (0 + a[1]) (0 + a[2]) dots.c (0 + a[n]) = a[1] a[2] dots.c a[n] = product_(i=1)^n a[i]
 $
+Since a polynomial of degree $n$ is uniquely determined by its roots and its value at one point, we conclude that $B(x)$ is uniquely determined by the two conditions.
 Therefore, to extract the coefficients of $B(x)$, we simply need to expand the product.
 
 == Algorithm
@@ -132,10 +133,10 @@ Creating the list of vectors representing the coefficients of the terms in $A(x)
 We now consider the recurrence relation of the rest of the algorithm.
 Let the time complexity of the algorithm be $T(N)$, where $N$ is the number of terms in $A(x)$, a power of $2$.
 The algorithm splits the problem into two subproblems of size $N/2$, which takes $O(N)$ time.
-Moreover, the time complexity of multiplying two polynomials of degree $N/2$ using the FFT is $O(N/2 log(N/2)) = O(N log N)$, which dominates the time complexity of each layer.
+Moreover, the time complexity of multiplying two polynomials of degree $N/2$ using the FFT is $O(N/2 log(N/2))$, which dominates the time complexity of each layer.
 Therefore, we have the recurrence relation:
 $
-  T(N) = 2 T(N/2) + O(N log N)
+  T(N) = 2 T(N/2) + O(N/2 log N/2)
 $
 #table(
   columns: (auto, auto, auto, auto),
@@ -144,20 +145,20 @@ $
   table.header(
     [*Layer*], [*\# problems*], [*Problem Length*], [*Work Done*],
   ),
-  $ 0 $, $ 1 $, $ N $, $ O(N log(N)) $,
-  $ 1 $, $ 2 $, $ N/2 $, $ 2 dot O(N/2 log(N/2))  $,
+  $ 0 $, $ 1 $, $ N $, $ O(N/2 log(N/2)) $,
+  $ 1 $, $ 2 $, $ N/2 $, $ 2 dot O(N/4 log(N/4))  $,
   $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
-  $ L $, $ 2^L $, $ N/(2^L) $, $ 2^L dot O(N/2^L log(N/(2^L))) $,
+  $ L $, $ 2^L $, $ N/(2^L) $, $ 2^L dot O(N/2^(L+1) log(N/(2^(L+1)))) $,
   $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
-  $ log_2(N) $, $ N $, $ 1 $, $ O(N) $
+  $ log_2(N) - 1 $, $ N/2 $, $ 2 $, $ O(N) $
 )
 Therefore, the total work done is:
 $
-  T(N) &= O(N log N) + O(N log(N/2)) + O(N log(N/4)) + dots.c + O(N) \
-  &= sum_(i=0)^(log_2(N)) O(N log(N/2^i)) \
-  &= O(N) sum_(i=0)^(log_2(N)) log(N/2^i) \
-  &= O(N) sum_(i=0)^(log_2(N)) (log N - i log 2) \
-  &= O(N) (log N dot log_2(N) - log(2) (log_2(N) dot (log_2(N) + 1))/2) \
+  T(N) &= O(N/2 log(N/2)) + O(N/2 log(N/4)) + dots.c + O(N) \
+  &= sum_(i=1)^(log_2(N)-1) O(N log(N/2^i)) + O(N)\
+  &= O(N) sum_(i=1)^(log_2(N)-1) log(N/2^i) + O(N)\
+  &= O(N) (sum_(i=1)^(log_2(N)-1) (log N - i log 2)+ 1) \
+  &= O(N) (log N dot (log_2(N) - 1) - log(2) ((log_2 N) (log_2 N - 1))/2 + 1) \
   &= O(N log^2 N) \
   &= O(n log^2 n)
 $
@@ -189,7 +190,7 @@ T = []        // list of trains taken
 
 WHILE current < n       // greedy scan
   best_t = None // index of the best train to take
-  best_d = -1 // the furthest city we can reach with the best train
+  best_d = current // the furthest city we can reach with the best train
 
   // iterate through all trains we can board
   WHILE (t <= m) AND (trains[t].c <= current)
@@ -239,7 +240,7 @@ We use induction on the number of executions of the outer `WHILE` loop.
   By the inductive hypothesis, every train before $t_0$ has been checked, and the train that takes the passenger to the furthest city possible has been found.
   Therefore, every train before $t_0$ cannot be boarded from the current city (as the current city is greater than or equal to the destinations of the trains before $t_0$).
   Therefore, they can be safely ignored.
-  The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible.
+  The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible, which is set to the next value of `current`.
 
 We now show that the sequence of trains returned by the algorithm is optimal.
 
@@ -350,10 +351,11 @@ We first show the dynamic programming algorithm is correct by consider the subpr
     V[i+1, k-1] + 1 + V[k+1, j]
   $
   (out-of-bounds indices are treated as value $0$).
+  Note that $[i+1, k-1]$ and $[k+1, j]$ are disjoint, since $i < k <= j$.
   After a pair is found, the subproblem no longer contains either character used in the pairing, satisfying the first condition in the problem.
   The `IF` statement ensures that the second condition is satisfied, since it only considers valid pairs.
   We then show the subproblem structure ensures the third condition by showing the two solution sets are equal.
-  If a pairing $(a, b)$ is found in either of the two subproblems, it must be that the pairing is in $(i+1, k-1)$, which satisfies $i < a < b < k$, or in $(k+1, j)$, which satisfies disjointness of $[a, b]$ and $[i, k]$.
+  If a pairing $(a, b)$ is found in either of the two subproblems, it must be that the pairing is in $(i+1, k-1)$, which satisfies $i < a < b < k$, or in $(k+1, j)$, which satisfies $[a, b]$ and $[i, k]$ being disjoint.
   Moreover, assume, to the contrary, that there exists a pairing $(a, b)$ such that $a < k < b$, which our algorithm will miss.
   However, this leads to a contradiction, since $[a, b] inter [i, k] != emptyset$ nor is one contained in the other, which violates the third condition.
   Therefore, all possible pairings are considered, and the subproblem structure is correct.
@@ -390,5 +392,5 @@ Therefore, the total time complexity to fill in the $V$ and `CHOICES` matrices i
 The backtracking algorithm runs in $O(n^2)$ time, since there are at most $O(n^2)$ subproblems to visit.
 Therefore, the overall time complexity of the algorithm is
 $
-  O(n^3 + n) = O(n^3)
+  O(n^3 + n^2) = O(n^3)
 $
