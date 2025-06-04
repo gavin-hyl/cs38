@@ -1,5 +1,5 @@
 #let title = "CS 38 Final Exam Responses"
-#let author = "Gavin Yuliu Hua"
+#let author = "Anonymous"
 #let date = "2025-06"
 
 #set heading(numbering: (..nums) => {
@@ -63,6 +63,8 @@ Since we have found a feasible solution to the dual linear program with objectiv
 Since the given solution to the primal LP has the objective value $8/3$, it is optimal.
 #align(right, $qed$)
 
+
+#pagebreak()
 =
 We first describe the form of $B(x)$.
 We claim it has the form
@@ -141,22 +143,22 @@ $
 #table(
   columns: (auto, auto, auto, auto),
   inset: 10pt,
-  align: horizon,
+  align: center,
   table.header(
-    [*Layer*], [*\# problems*], [*Problem Length*], [*Work Done*],
+    [*Layer*], [*\# of Problems*], [*Problem Length*], [*Work Done*],
   ),
   $ 0 $, $ 1 $, $ N $, $ O(N/2 log(N/2)) $,
   $ 1 $, $ 2 $, $ N/2 $, $ 2 dot O(N/4 log(N/4))  $,
   $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
   $ L $, $ 2^L $, $ N/(2^L) $, $ 2^L dot O(N/2^(L+1) log(N/(2^(L+1)))) $,
   $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
-  $ log_2(N) - 1 $, $ N/2 $, $ 2 $, $ O(N) $
+  $ log_2(N) - 1 $, $ N/2 $, $ 2 $, $ O(N/2) $
 )
 Therefore, the total work done is:
 $
-  T(N) &= O(N/2 log(N/2)) + O(N/2 log(N/4)) + dots.c + O(N) \
-  &= sum_(i=1)^(log_2(N)-1) O(N log(N/2^i)) + O(N)\
-  &= O(N) sum_(i=1)^(log_2(N)-1) log(N/2^i) + O(N)\
+  T(N) &= O(N/2 log(N/2)) + O(N/2 log(N/4)) + dots.c + O(N/2) \
+  &= sum_(i=1)^(log_2(N)-1) O(N/2 log(N/2^i)) + O(N/2)\
+  &= O(N/2) sum_(i=1)^(log_2(N)-1) log(N/2^i) + O(N)\
   &= O(N) (sum_(i=1)^(log_2(N)-1) (log N - i log 2)+ 1) \
   &= O(N) (log N dot (log_2(N) - 1) - log(2) ((log_2 N) (log_2 N - 1))/2 + 1) \
   &= O(N log^2 N) \
@@ -170,6 +172,7 @@ $
 $
 
 
+#pagebreak()
 = // 3
 == Algorithm
 We employ a greedy algorithm to solve the problem.
@@ -237,7 +240,7 @@ We use induction on the number of executions of the outer `WHILE` loop.
 - Inductive step: assume the inner loop correctly finds the train that takes the passenger to the furthest city possible after $k$ executions of the outer loop.
   We now show that it correctly finds the train that takes the passenger to the furthest city possible after $k + 1$ executions of the outer loop.
   Let the initial value of `t` be $t_0$.
-  By the inductive hypothesis, every train before $t_0$ has been checked, and the train that takes the passenger to the furthest city possible has been found.
+  By the inductive hypothesis, every train before $t_0$ has been checked (if not, there is no guarantee for any destination being the furthest), and the train that takes the passenger to the furthest city possible has been found.
   Therefore, every train before $t_0$ cannot be boarded from the current city (as the current city is greater than or equal to the destinations of the trains before $t_0$).
   Therefore, they can be safely ignored.
   The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible, which is set to the next value of `current`.
@@ -246,10 +249,15 @@ We now show that the sequence of trains returned by the algorithm is optimal.
 
 
 Since this is a greedy algorithm, we use an exchange argument to show that it is correct.
-Suppose we have a sequence of trains $T$ that is optimal, we will show that it can be iteratively transformed into the sequence of trains returned by the algorithm.
+The greedy algorithm entails two conditions.
++ At every city, we take the train that takes us to the furthest city possible (overtly returned in the list of trains).
++ The destination of the train we take is the furthest city we can reach with that train (implicit in the algorithm).
 Let $T = (t_1, t_2, dots.c, t_k)$ be the sequence of trains.
+Suppose we have a sequence of trains $T$ that is optimal, we will show that it can be iteratively transformed into the sequence of trains returned by the algorithm.
 Moreover, denote the optimal destination of train $t_i$ as $d_i^* in [c_i, d_i]$.
+Since this need not be specified by the optimal solution, we may choose an arbitrary destination for each train $t_i$ such that the destination is within the range of the train.
 Each $d_i^*$ must also be the start of the next train in the sequence (if $d_i^* != n$).
+We will show an arbitrary assignment of $d_i^*$ on the optimal sequence $T$ can be transformed into the sequence of trains returned by the algorithm without changing the cost.
 
 Suppose that $t_i in T$ is the first train in the sequence that does not satisfy the greedy condition.
 That is, either $d_i^* < d_i$ (we do not take the train to its ending city), or exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ (we can board $t_j$) and $d_j > d_i^*$ (it takes us further than $t_i$).
@@ -287,7 +295,7 @@ $
 
 
 
-
+#pagebreak()
 = // 4
 == Algorithm
 We use dynamic programming to solve the problem.
@@ -392,5 +400,5 @@ Therefore, the total time complexity to fill in the $V$ and `CHOICES` matrices i
 The backtracking algorithm runs in $O(n^2)$ time, since there are at most $O(n^2)$ subproblems to visit.
 Therefore, the overall time complexity of the algorithm is
 $
-  O(n^3 + n^2) = O(n^3)
+  O(n^2 + n^3 + n^2) = O(n^3)
 $
