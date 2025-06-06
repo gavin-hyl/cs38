@@ -187,7 +187,7 @@ ROUTE
 
 trains = [(t, c_t, d_t) for t in 1:m]
 sort trains by c_t, break ties randomly  // sort by starting city
-t = 1         // index into the *SORTED* list of trains
+t = 0         // index into the *SORTED* list of trains
 current = 1   // we start at city 1
 T = []        // list of trains taken
 
@@ -197,10 +197,10 @@ WHILE current < n       // greedy scan
 
   // iterate through all trains we can board
   WHILE (t <= m) AND (trains[t].c <= current)
+    t = t + 1
     IF (trains[t].d > best_d)
       best_t = t            // we should board this train
       best_d = trains[t].d  // update the furthest city we can reach
-    t = t + 1
   
   IF best_t is None // no train can take us to the next city
     RETURN None // we cannot reach city n, return None
@@ -235,15 +235,19 @@ Therefore, the algorithm correctly returns None iff no sequence of trains can ta
 
 We also show that the inner `WHILE` loop correctly finds the train that takes the passenger to the furthest city possible.
 We use induction on the number of executions of the outer `WHILE` loop.
+- Inductive hypothesis: at the start of the $k$'th execution of the outer loop, let the value of `t` be $t_0$. The current city is the furthest destination that the passenger can reach starting from city $1$ with the first $t_0$ trains.
 - Base case: the outer loop has not been executed once yet.
-  In this case, the inner loop iterates through all trains that can be boarded from city 1, and finds the train that takes the passenger to the furthest city possible.
-- Inductive step: assume the inner loop correctly finds the train that takes the passenger to the furthest city possible after $k$ executions of the outer loop.
-  We now show that it correctly finds the train that takes the passenger to the furthest city possible after $k + 1$ executions of the outer loop.
-  Let the initial value of `t` be $t_0$.
-  By the inductive hypothesis, every train before $t_0$ has been checked (if not, there is no guarantee for any destination being the furthest), and the train that takes the passenger to the furthest city possible has been found.
+  In this case, $t_0 = 0$, and city $1$ is the current city.
+  It is also the furthest city that the passenger can reach starting from city $1$ with no trains.
+- Inductive step: assume that the inductive hypothesis holds for $k$ executions of the outer loop.
+  We now show that it holds for $k + 1$ executions of the outer loop.
+  By the inductive hypothesis, the current city is the furthest destination that the passenger can reach starting from city $1$ with the first $t_0$ trains.
   Therefore, every train before $t_0$ cannot be boarded from the current city (as the current city is greater than or equal to the destinations of the trains before $t_0$).
-  Therefore, they can be safely ignored.
+  Therefore, we can safely ignore them.
   The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible, which is set to the next value of `current`.
+  Let the ending value of `t` be $t_1$.
+  We have checked all trains from $t_0$ to $t_1$, so we have checked every train before $t_1$, and set the current city to the furthest possible city.
+  Therefore, the inductive hypothesis holds for $k + 1$ executions of the outer loop.
 
 We now show that the sequence of trains returned by the algorithm is optimal.
 
