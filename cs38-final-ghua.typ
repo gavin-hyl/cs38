@@ -76,7 +76,9 @@ $
   B(-a[i]) &= (-a[i] + a[1]) (-a[i] + a[2]) dots.c (-a[i] + a[i]) dots.c (-a[i] + a[n]) = 0 space forall i\
   B(0) &= (0 + a[1]) (0 + a[2]) dots.c (0 + a[n]) = a[1] a[2] dots.c a[n] = product_(i=1)^n a[i]
 $
-Since a polynomial of degree $n$ is uniquely determined by its roots and its value at one point, we conclude that $B(x)$ is uniquely determined by the two conditions.
+We note that all $a[i]$ are nonzero, as given in the problem statement.
+Therefore, $[0, a[1], dots, a[n]]$ are $n+1$ distinct points.
+Since a polynomial of degree $n$ is uniquely determined by its values at $n+1$ distinct points, $B(x)$ is uniquely determined by the two conditions.
 Therefore, to extract the coefficients of $B(x)$, we simply need to expand the product.
 
 == Algorithm
@@ -125,9 +127,9 @@ Since we have shown that the algorithm works for both the base case and the indu
 Since $N$, the number of terms in $A(x)$, is a power of $2$, the algorithm correctly computes the coefficients of $A(x)$, and therefore $B(x)$, for any $n$.
 
 == Complexity
-Since $2^k$ is unbounded, there must be some $k$ such that $2^k >= n$.
+Since $2^k$ is unbounded as $k -> oo$, there must be some $k$ such that $2^k >= n$.
 Moreover, the smallest such $k$ satisfies $2^k <= 2n$.
-Assume, to the contrary, that $2^k > 2n$.
+Assume, to the contrary, that the smallest $k$ satisfies $2^k > 2n$.
 Then, we have $2^(k-1) > n$, so we can find a $k' = k-1 < k$ such that $2^k' >= n$, which contradicts the definition of $k$ as the smallest integer such that $2^k >= n$.
 Therefore, the total number of terms in $A(x)$ is at most $2n$.
 Creating the list of vectors representing the coefficients of the terms in $A(x)$ takes $O(n)$ time, since there are at most $2n$ terms and each term takes a constant time to construct.
@@ -154,6 +156,9 @@ $
   $ dots.v $, $ dots.v $, $ dots.v $, $ dots.v $,
   $ log_2(N) - 1 $, $ N/2 $, $ 2 $, $ O(N/2) $
 )
+Note that the bottommost layer has problems of length $2$ (instead of the usual $1$), since for polynomials of degree $1$ (length-$2$ problems), we do not need to use the FFT to multiply them.
+We return them directly instead.
+
 Therefore, the total work done is:
 $
   T(N) &= O(N/2 log(N/2)) + O(N/2 log(N/4)) + dots.c + O(N/2) \
@@ -187,7 +192,7 @@ ROUTE
 
 trains = [(t, c_t, d_t) for t in 1:m]
 sort trains by c_t, break ties randomly  // sort by starting city
-t = 0         // index into the *SORTED* list of trains
+t = 1         // index into the *SORTED* list of trains
 current = 1   // we start at city 1
 T = []        // list of trains taken
 
@@ -197,10 +202,10 @@ WHILE current < n       // greedy scan
 
   // iterate through all trains we can board
   WHILE (t <= m) AND (trains[t].c <= current)
-    t = t + 1
     IF (trains[t].d > best_d)
       best_t = t            // we should board this train
       best_d = trains[t].d  // update the furthest city we can reach
+    t = t + 1
   
   IF best_t is None // no train can take us to the next city
     RETURN None // we cannot reach city n, return None
@@ -235,9 +240,9 @@ Therefore, the algorithm correctly returns None iff no sequence of trains can ta
 
 We also show that the inner `WHILE` loop correctly finds the train that takes the passenger to the furthest city possible.
 We use induction on the number of executions of the outer `WHILE` loop.
-- Inductive hypothesis: at the start of the $k$'th execution of the outer loop, let the value of `t` be $t_0$. The current city is the furthest destination that the passenger can reach starting from city $1$ with the first $t_0$ trains.
+- Inductive hypothesis: at the start of the $k$'th execution of the outer loop, let the value of `t` be $t_0$. The current city is the furthest destination that the passenger can reach starting from city $1$ with the first $t_0-1$ trains.
 - Base case: the outer loop has not been executed once yet.
-  In this case, $t_0 = 0$, and city $1$ is the current city.
+  In this case, $t_0 = 1$, and city $1$ is the current city.
   It is also the furthest city that the passenger can reach starting from city $1$ with no trains.
 - Inductive step: assume that the inductive hypothesis holds for $k$ executions of the outer loop.
   We now show that it holds for $k + 1$ executions of the outer loop.
@@ -246,7 +251,7 @@ We use induction on the number of executions of the outer `WHILE` loop.
   Therefore, we can safely ignore them.
   The inner loop iterates through all trains starting from $t_0$ that can be boarded from the current city, and finds the train that takes the passenger to the furthest city possible, which is set to the next value of `current`.
   Let the ending value of `t` be $t_1$.
-  We have checked all trains from $t_0$ to $t_1$, so we have checked every train before $t_1$, and set the current city to the furthest possible city.
+  We have checked all trains from $t_0$ to $t_1$ (not including $t_1$), so we have checked every train before $t_1$, and set the current city to the furthest possible city.
   Therefore, the inductive hypothesis holds for $k + 1$ executions of the outer loop.
 
 We now show that the sequence of trains returned by the algorithm is optimal.
@@ -312,7 +317,7 @@ PAIRINGS
 // Output: P, a list of pairs of indices representing the maximum cardinality pairings.
 
 V = n by n matrix of 0s representing the values of subproblems
-// choices (whether or not to pair the first character, if so, which one) for each subproblems
+// choices (whether or not to pair the first character, if so, which one)
 CHOICES = n by n matrix of None 
 
 FOR length=2:n            // fill in the subproblems in order of increasing length
@@ -322,7 +327,7 @@ FOR length=2:n            // fill in the subproblems in order of increasing leng
     CHOICES[i, j] = None  // do not pair
 
     FOR k=i+1:j           // iterate through all characters to find the best pairing
-      IF (b[i], b[k]) is a valid pair
+      IF (b[i], b[k]) in { (A, C),(C, A),(B, D),(D, B) }
         // two subproblems, +1 for the new pair, out of bounds indices give V=0
         value = V[i+1, k-1] + 1 + V[k+1, j] 
         IF value > V[i, j]
@@ -364,8 +369,8 @@ We first show the dynamic programming algorithm is correct by consider the subpr
   $
   (out-of-bounds indices are treated as value $0$).
   Note that $[i+1, k-1]$ and $[k+1, j]$ are disjoint, since $i < k <= j$.
-  After a pair is found, the subproblem no longer contains either character used in the pairing, satisfying the first condition in the problem.
-  The `IF` statement ensures that the second condition is satisfied, since it only considers valid pairs.
+  After a pair is found, the subproblems no longer contain either character used in the pairing, satisfying the first condition in the problem.
+  The first `IF` statement in the $k$ loop ensures that the second condition is satisfied, since it only considers valid pairs.
   We then show the subproblem structure ensures the third condition by showing the two solution sets are equal.
   If a pairing $(a, b)$ is found in either of the two subproblems, it must be that the pairing is in $(i+1, k-1)$, which satisfies $i < a < b < k$, or in $(k+1, j)$, which satisfies $[a, b]$ and $[i, k]$ being disjoint.
   Moreover, assume, to the contrary, that there exists a pairing $(a, b)$ such that $a < k < b$, which our algorithm will miss.
@@ -375,7 +380,7 @@ We first show the dynamic programming algorithm is correct by consider the subpr
   $
     V[i, j] = max(V[i+1, j], max_(i < k <= j) (V[i+1, k-1] + 1 + V[k+1, j]))
   $
-- Ordering: we note that $V[i, j]$ only depends on $V[i+1, j]$, $V[i+1, k-1]$, and $V[k+1, j]$ for some $k$ such that $i < k <= j$.
+- Ordering: we note that $V[i, j]$ only depends on $V[i+1, j]$, $V[i+1, k-1]$, and $V[k+1, j]$ for all $k$ such that $i < k <= j$.
   All of the subproblems are shorter in length. 
   Therefore, we can compute the values of the subproblems in order of increasing length of the substring $b[i..j]$, which is what the algorithm does.
   This ensures that whenever a problem is computed, all problems of smaller length have already been computed, adn therefore the values of the subproblems are correct.
