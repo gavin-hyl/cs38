@@ -191,7 +191,7 @@ ROUTE
 // Output: T, a sequence of trains represented by a list of integers, where T[i] is the i'th train taken.
 
 trains = [(t, c_t, d_t) for t in 1:m]
-sort trains by c_t, break ties randomly  // sort by starting city
+quicksort trains by c_t, break ties randomly  // sort by starting city
 t = 1         // index into the *SORTED* list of trains
 current = 1   // we start at city 1
 T = []        // list of trains taken
@@ -265,8 +265,9 @@ Let $T = (t_1, t_2, dots.c, t_k)$ be the sequence of trains.
 Suppose we have a sequence of trains $T$ that is optimal, we will show that it can be iteratively transformed into the sequence of trains returned by the algorithm.
 Moreover, denote the optimal destination of train $t_i$ as $d_i^* in [c_i, d_i]$.
 Since this need not be specified by the optimal solution, we may choose an arbitrary destination for each train $t_i$ such that the destination is within the range of the train.
+Each arbitrary assignment does not change the cost of the sequence, since the cost is defined as the number of trains taken.
 Each $d_i^*$ must also be the start of the next train in the sequence (if $d_i^* != n$).
-We will show an arbitrary assignment of $d_i^*$ on the optimal sequence $T$ can be transformed into the sequence of trains returned by the algorithm without changing the cost.
+We will show an arbitrary assignment of $d_i^*$ on the optimal sequence $T$ and $T$ can be transformed into the sequence of trains and the implicit destination list returned by the algorithm without changing the cost.
 
 Suppose that $t_i in T$ is the first train in the sequence that does not satisfy the greedy condition.
 That is, either $d_i^* < d_i$ (we do not take the train to its ending city), or exists a train $t_j$ such that $c_j <= d_(i-1)^* <= d_j$ (we can board $t_j$) and $d_j > d_i^*$ (it takes us further than $t_i$).
@@ -300,6 +301,50 @@ The operations in the inner `WHILE` loop are also constant time operations, and 
 Therefore, the overall time complexity of the algorithm is 
 $
   O(m log m + m + m) = O(m log m)
+$
+which is polynomial in $m+n$.
+
+=== Extra Notes on Complexity - Alternative Sorting Algorithm
+The algorithm can also be implemented in $O(m+n)$ time with a slight modification.
+This is superior or equivalent to to $O(m log m)$ if $n <= k(m log m)$ for some $k$, since in that case, $O(m+n) subset.eq O(m log m)$.
+However, if $n$ cannot be bounded by $k(m log m)$ for some $k$, then the original sorting algorithm is better.
+Both, however, are polynomial in $m+n$, and thus satisfy the problem's requirements.
+
+Instead of performing quicksort on the list of trains, we can sort the trains in the following manner.
+```
+========
+ALT_SORT
+--------
+// Input: n, the number of cities; (c_t, d_t) for 1 <= t <= m, describing trains.
+// Output: trains, a list of trains sorted by their starting city, where each train is represented as a tuple (t, c_t, d_t).
+
+// starts stores the trains starting at each city
+starts = an empty array of length n, initialized to empty lists
+FOR t in 1:m  // iterate through all trains
+  starts[c_t].append((t, c_t, d_t)) // append the train to the list of trains starting at city c_t
+
+trains = [] // the sorted list of trains
+FOR c in 1:n // iterate through all cities
+  add the elements of starts[c] to trains // append the trains starting at city c to the sorted list
+RETURN trains // return the sorted list of trains
+========
+```
+
+=== Correctness
+The algorithm correctly sorts the trains by their starting city, since it iterates through all trains and appends them to the list of trains starting at each city.
+The trains are then appended to the sorted list in order of their starting city, which is correct.
+
+=== Complexity
+The algorithm iterates through all trains once, which takes $O(m)$ time.
+The algorithm then iterates through all cities, which takes $O(n)$ time.
+Adding all the trains back to the sorted list takes $O(m)$ time, since there are at most $m$ trains.
+Therefore, the overall time complexity of the alternative sorting algorithm is
+$
+  O(m + n + m) = O(m + n)
+$
+Therefore, using this alternative sorting algorithm, the overall time complexity of the algorithm is
+$
+  O(m + n + m +m) = O(m + n)
 $
 
 
